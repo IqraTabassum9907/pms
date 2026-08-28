@@ -1,0 +1,529 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// System Users & Roles
+model User {
+  id           String      @id @default(cuid())
+  name         String
+  email        String      @unique
+  password     String
+  role         String      // ADMIN, PURCHASE_MANAGER, PURCHASE_EXECUTIVE, ACCOUNTS, STORE_MANAGER, DEPARTMENT_HEAD
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  avatar       String?
+  phone        String?
+  status       String      @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  headName  String?
+  users     User[]
+  indents   PurchaseIndent[]
+  pos       PurchaseOrder[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Employee {
+  id           String     @id @default(cuid())
+  code         String     @unique
+  name         String
+  email        String
+  phone        String?
+  departmentId String
+  designation  String
+  status       String     @default("ACTIVE")
+}
+
+model Vendor {
+  id            String          @id @default(cuid())
+  code          String          @unique
+  name          String
+  contactPerson String
+  email         String
+  phone         String
+  address       String
+  city          String
+  state         String
+  gstNumber     String
+  pan           String
+  bankName      String
+  accountNumber String
+  ifsc          String
+  paymentTerms  String
+  creditDays    Int             @default(30)
+  rating        Float           @default(4.5)
+  status        String          @default("ACTIVE") // ACTIVE, INACTIVE
+  quotations    Quotation[]
+  pos           PurchaseOrder[]
+  payments      Payment[]
+  logistics     Logistics[]
+  receipts      MaterialReceipt[]
+  returns       PurchaseReturn[]
+  followUps     FollowUp[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Material {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  name          String
+  description   String?
+  categoryId    String
+  category      Category @relation(fields: [categoryId], references: [id])
+  unitId        String
+  unit          Unit     @relation(fields: [unitId], references: [id])
+  estimatedRate Float
+  gstRate       Float    @default(18.0)
+  reorderLevel  Float    @default(100)
+  minOrderQty   Float    @default(10)
+  status        String   @default("ACTIVE")
+  inventories   Inventory[]
+  indentItems   PurchaseIndentItem[]
+  poItems       PurchaseOrderItem[]
+  quotationItems QuotationItem[]
+  receiptItems  MaterialReceiptItem[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  code        String     @unique
+  name        String
+  description String?
+  materials   Material[]
+}
+
+model Unit {
+  id        String     @id @default(cuid())
+  code      String     @unique
+  name      String
+  symbol    String
+  materials Material[]
+  inventories Inventory[]
+  indentItems PurchaseIndentItem[]
+  poItems   PurchaseOrderItem[]
+}
+
+model Warehouse {
+  id          String      @id @default(cuid())
+  code        String      @unique
+  name        String
+  location    String
+  address     String
+  managerName String
+  contactPhone String
+  inventories Inventory[]
+  receipts    MaterialReceipt[]
+  stockMovements StockMovement[]
+}
+
+model TaxGST {
+  id        String   @id @default(cuid())
+  name      String
+  rate      Float
+  cgst      Float
+  sgst      Float
+  igst      Float
+  isDefault Boolean  @default(false)
+}
+
+model PaymentTerm {
+  id   String @id @default(cuid())
+  code String @unique
+  name String
+  days Int
+}
+
+model DeliveryTerm {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  description String?
+}
+
+model TATConfiguration {
+  id        String   @id @default(cuid())
+  stageKey  String   @unique
+  stageName String
+  days      Int      @default(1)
+  hours     Int      @default(0)
+  minutes   Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+// WORKFLOW ENTITIES
+
+model PurchaseIndent {
+  id                   String               @id @default(cuid())
+  indentNo             String               @unique
+  indentDate           DateTime             @default(now())
+  departmentId         String
+  department           Department           @relation(fields: [departmentId], references: [id])
+  requestedById        String
+  requestedByName      String
+  requiredDate         DateTime
+  priority             String               @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  purpose              String
+  remarks              String?
+  status               String               @default("SUBMITTED") // DRAFT, SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, CANCELLED
+  totalEstimatedAmount Float                @default(0)
+  plannedDate          DateTime?
+  actualDate           DateTime?
+  items                PurchaseIndentItem[]
+  approvals            IndentApproval[]
+  quotations           Quotation[]
+  pos                  PurchaseOrder[]
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+}
+
+model PurchaseIndentItem {
+  id              String         @id @default(cuid())
+  indentId        String
+  indent          PurchaseIndent @relation(fields: [indentId], references: [id], onDelete: Cascade)
+  materialId      String
+  material        Material       @relation(fields: [materialId], references: [id])
+  description     String?
+  quantity        Float
+  unitId          String
+  unit            Unit           @relation(fields: [unitId], references: [id])
+  estimatedRate   Float
+  estimatedAmount Float
+}
+
+model IndentApproval {
+  id         String         @id @default(cuid())
+  indentId   String
+  indent     PurchaseIndent @relation(fields: [indentId], references: [id], onDelete: Cascade)
+  actionBy   String
+  actionRole String
+  action     String         // APPROVED, REJECTED, SENT_BACK
+  comments   String?
+  createdAt  DateTime       @default(now())
+}
+
+model Quotation {
+  id             String          @id @default(cuid())
+  quotationNo    String          @unique
+  quotationDate  DateTime        @default(now())
+  vendorId       String
+  vendor         Vendor          @relation(fields: [vendorId], references: [id])
+  indentId       String
+  indent         PurchaseIndent  @relation(fields: [indentId], references: [id])
+  validUntil     DateTime
+  paymentTerms   String
+  deliveryTerms  String
+  freight        Float           @default(0)
+  taxAmount      Float           @default(0)
+  discountAmount Float           @default(0)
+  totalAmount    Float
+  remarks        String?
+  attachmentUrl  String?
+  status         String          @default("RECEIVED") // RECEIVED, UNDER_REVIEW, SELECTED, REJECTED
+  items          QuotationItem[]
+  pos            PurchaseOrder[]
+  createdAt      DateTime        @default(now())
+}
+
+model QuotationItem {
+  id              String    @id @default(cuid())
+  quotationId     String
+  quotation       Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  materialId      String
+  material        Material  @relation(fields: [materialId], references: [id])
+  quantity        Float
+  rate            Float
+  discountPercent Float     @default(0)
+  gstPercent      Float     @default(18)
+  amount          Float
+  total           Float
+}
+
+model PurchaseOrder {
+  id                   String              @id @default(cuid())
+  poNo                 String              @unique
+  poDate               DateTime            @default(now())
+  vendorId             String
+  vendor               Vendor              @relation(fields: [vendorId], references: [id])
+  indentId             String?
+  indent               PurchaseIndent?     @relation(fields: [indentId], references: [id])
+  quotationId          String?
+  quotation            Quotation?          @relation(fields: [quotationId], references: [id])
+  departmentId         String
+  department           Department          @relation(fields: [departmentId], references: [id])
+  deliveryAddress      String
+  billingAddress       String
+  paymentTerms         String
+  deliveryTerms        String
+  expectedDeliveryDate DateTime
+  freight              Float               @default(0)
+  discount             Float               @default(0)
+  gstAmount            Float               @default(0)
+  otherCharges         Float               @default(0)
+  grandTotal           Float
+  status               String              @default("PENDING_APPROVAL") // DRAFT, PENDING_APPROVAL, APPROVED, REJECTED, SENT, IN_PROGRESS, PARTIALLY_COMPLETED, COMPLETED, CANCELLED
+  approvalLevel        Int                 @default(1)
+  plannedDate          DateTime?
+  actualDate           DateTime?
+  items                PurchaseOrderItem[]
+  approvals            POApproval[]
+  dispatches           PODispatch[]
+  followUps            FollowUp[]
+  payments             Payment[]
+  logistics            Logistics[]
+  receipts             MaterialReceipt[]
+  returns              PurchaseReturn[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  poId            String
+  po              PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+  materialId      String
+  material        Material      @relation(fields: [materialId], references: [id])
+  description     String?
+  quantity        Float
+  unitId          String
+  unit            Unit          @relation(fields: [unitId], references: [id])
+  rate            Float
+  discountPercent Float         @default(0)
+  gstPercent      Float         @default(18)
+  gstAmount       Float
+  totalAmount     Float
+}
+
+model POApproval {
+  id         String        @id @default(cuid())
+  poId       String
+  po         PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+  level      Int
+  actionBy   String
+  actionRole String
+  action     String        // APPROVED, REJECTED, SENT_BACK
+  comments   String?
+  createdAt  DateTime      @default(now())
+}
+
+model PODispatch {
+  id               String        @id @default(cuid())
+  poId             String
+  po               PurchaseOrder @relation(fields: [poId], references: [id])
+  dispatchDate     DateTime      @default(now())
+  dispatchMethod   String        // EMAIL, PORTAL, WHATSAPP, MANUAL
+  recipientEmail   String
+  recipientContact String?
+  message          String?
+  status           String        @default("SENT") // NOT_SENT, SENT, VIEWED, ACKNOWLEDGED
+  createdAt        DateTime      @default(now())
+}
+
+model FollowUp {
+  id               String        @id @default(cuid())
+  poId             String
+  po               PurchaseOrder @relation(fields: [poId], references: [id])
+  vendorId         String
+  vendor           Vendor        @relation(fields: [vendorId], references: [id])
+  followUpDate     DateTime      @default(now())
+  nextFollowUpDate DateTime?
+  daysPending      Int           @default(0)
+  status           String        @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, RESCHEDULED
+  remarks          String
+  actionTaken      String?       // CALL, EMAIL, WHATSAPP, MEETING
+  createdByName    String
+  createdAt        DateTime      @default(now())
+}
+
+model Payment {
+  id            String               @id @default(cuid())
+  paymentNo     String               @unique
+  poId          String
+  po            PurchaseOrder        @relation(fields: [poId], references: [id])
+  vendorId      String
+  vendor        Vendor               @relation(fields: [vendorId], references: [id])
+  invoiceNo     String
+  invoiceDate   DateTime
+  invoiceAmount Float
+  paidAmount    Float                @default(0)
+  balanceAmount Float
+  dueDate       DateTime
+  status        String               @default("PENDING") // PENDING, PARTIALLY_PAID, PAID, OVERDUE
+  transactions  PaymentTransaction[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
+model PaymentTransaction {
+  id             String   @id @default(cuid())
+  paymentId      String
+  payment        Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  amount         Float
+  paymentDate    DateTime @default(now())
+  paymentMethod  String   // BANK_TRANSFER, NEFT, RTGS, CHEQUE, UPI
+  transactionRef String
+  remarks        String?
+  createdByName  String
+  createdAt      DateTime @default(now())
+}
+
+model Logistics {
+  id             String        @id @default(cuid())
+  poId           String
+  po             PurchaseOrder @relation(fields: [poId], references: [id])
+  vendorId       String
+  vendor         Vendor        @relation(fields: [vendorId], references: [id])
+  dispatchDate   DateTime
+  vehicleNo      String
+  vehicleType    String
+  transporter    String
+  driverName     String
+  driverPhone    String
+  freight        Float         @default(0)
+  expectedArrival DateTime
+  trackingNo     String?
+  status         String        @default("LOGISTICS_PENDING") // LOGISTICS_PENDING, VEHICLE_ASSIGNED, DISPATCHED, IN_TRANSIT, DELIVERED
+  createdAt      DateTime      @default(now())
+}
+
+model MaterialReceipt {
+  id            String                @id @default(cuid())
+  grnNo         String                @unique
+  poId          String
+  po            PurchaseOrder         @relation(fields: [poId], references: [id])
+  vendorId      String
+  vendor        Vendor                @relation(fields: [vendorId], references: [id])
+  receiptDate   DateTime              @default(now())
+  warehouseId   String
+  warehouse     Warehouse             @relation(fields: [warehouseId], references: [id])
+  vehicleNo     String?
+  invoiceNo     String?
+  receivedByName String
+  remarks       String?
+  status        String                @default("COMPLETED")
+  items         MaterialReceiptItem[]
+  inspections   QualityInspection[]
+  returns       PurchaseReturn[]
+  createdAt     DateTime              @default(now())
+}
+
+model MaterialReceiptItem {
+  id           String          @id @default(cuid())
+  receiptId    String
+  receipt      MaterialReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  materialId   String
+  material     Material        @relation(fields: [materialId], references: [id])
+  orderedQty   Float
+  receivedQty  Float
+  acceptedQty  Float
+  rejectedQty  Float           @default(0)
+  damagedQty   Float           @default(0)
+  batchNo      String?
+  expiryDate   DateTime?
+  remarks      String?
+}
+
+model QualityInspection {
+  id            String          @id @default(cuid())
+  receiptId     String
+  receipt       MaterialReceipt @relation(fields: [receiptId], references: [id])
+  materialId    String
+  batchNo       String?
+  inspectedQty  Float
+  passedQty     Float
+  failedQty     Float           @default(0)
+  inspectionDate DateTime       @default(now())
+  inspectorName String
+  qualityStatus String          @default("PASSED") // PENDING, PASSED, FAILED, PARTIALLY_PASSED
+  remarks       String?
+}
+
+model Inventory {
+  id             String    @id @default(cuid())
+  materialId     String
+  material       Material  @relation(fields: [materialId], references: [id])
+  warehouseId    String
+  warehouse      Warehouse @relation(fields: [warehouseId], references: [id])
+  sku            String
+  openingStock   Float     @default(0)
+  receivedStock  Float     @default(0)
+  issuedStock    Float     @default(0)
+  reservedStock  Float     @default(0)
+  availableStock Float     @default(0)
+  reorderLevel   Float     @default(50)
+  unitId         String
+  unit           Unit      @relation(fields: [unitId], references: [id])
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([materialId, warehouseId])
+}
+
+model StockMovement {
+  id            String    @id @default(cuid())
+  materialId    String
+  warehouseId   String
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
+  movementType  String    // INBOUND_GRN, OUTBOUND_ISSUE, RETURN_TO_VENDOR, ADJUSTMENT
+  quantity      Float
+  referenceType String    // PO, GRN, RETURN, MANUAL
+  referenceNo   String
+  movementDate  DateTime  @default(now())
+  createdByName String
+  remarks       String?
+}
+
+model PurchaseReturn {
+  id                String           @id @default(cuid())
+  returnNo          String           @unique
+  poId              String
+  po                PurchaseOrder    @relation(fields: [poId], references: [id])
+  receiptId         String?
+  receipt           MaterialReceipt? @relation(fields: [receiptId], references: [id])
+  vendorId          String
+  vendor            Vendor           @relation(fields: [vendorId], references: [id])
+  returnDate        DateTime         @default(now())
+  reason            String
+  totalReturnAmount Float            @default(0)
+  status            String           @default("PENDING_APPROVAL") // DRAFT, PENDING_APPROVAL, APPROVED, RETURNED, COMPLETED
+  createdByName     String
+  createdAt         DateTime         @default(now())
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  userEmail      String
+  userName       String
+  userRole       String
+  action         String
+  entity         String
+  entityId       String
+  previousStatus String?
+  newStatus      String?
+  details        String?
+  createdAt      DateTime @default(now())
+}
+
+model Notification {
+  id            String   @id @default(cuid())
+  title         String
+  message       String
+  type          String   @default("INFO") // INFO, WARNING, URGENT, SUCCESS
+  recipientRole String?  // NULL = ALL, or specific role like PURCHASING, ACCOUNTS, etc.
+  isRead        Boolean  @default(false)
+  linkUrl       String?
+  createdAt     DateTime @default(now())
+}
