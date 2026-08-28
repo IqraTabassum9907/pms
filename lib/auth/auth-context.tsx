@@ -61,24 +61,21 @@ const DEFAULT_USERS: Record<UserRole, AuthUser> = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(DEFAULT_USERS.ADMIN);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("purchaseflow_user");
-    if (savedUser) {
-      try {
+    try {
+      const savedUser = localStorage.getItem("purchaseflow_user");
+      if (savedUser) {
         setUser(JSON.parse(savedUser));
-      } catch {
-        setUser(DEFAULT_USERS.ADMIN);
+      } else {
+        localStorage.setItem("purchaseflow_user", JSON.stringify(DEFAULT_USERS.ADMIN));
       }
-    } else {
-      // Default auto-login as Admin for seamless demo experience
+    } catch {
       setUser(DEFAULT_USERS.ADMIN);
-      localStorage.setItem("purchaseflow_user", JSON.stringify(DEFAULT_USERS.ADMIN));
     }
-    setIsLoading(false);
   }, []);
 
   const login = (newUser: AuthUser) => {
@@ -123,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (user.role === "STORE_MANAGER" && ["material-receipt"].includes(permission.replace("reports:", ""))) return true;
     }
     if (permission.startsWith("administration:")) {
-      return user.role === "ADMIN";
+      return (user.role as string) === "ADMIN";
     }
     return true;
   };

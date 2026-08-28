@@ -115,9 +115,9 @@ export function DataTable<TData, TValue>({
         <div className="overflow-x-auto max-h-[600px]">
           <table className="w-full text-left border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80 backdrop-blur-xs text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[11px]">
-              {table.getHeaderGroups().map((headerGroup) => (
+              {table.getHeaderGroups().map((headerGroup: any) => (
                 <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
+                  {headerGroup.headers.map((header: any) => (
                     <th key={header.id} className="py-3 px-4">
                       {header.isPlaceholder ? null : (
                         <div
@@ -139,12 +139,12 @@ export function DataTable<TData, TValue>({
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
+                table.getRowModel().rows.map((row: any) => (
                   <tr
                     key={row.id}
                     className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                   >
-                    {row.getVisibleCells().map((cell) => (
+                    {row.getVisibleCells().map((cell: any) => (
                       <td key={cell.id} className="py-3 px-4 text-slate-700 dark:text-slate-200">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>

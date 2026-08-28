@@ -184,7 +184,7 @@ export default function DashboardPage() {
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Overdue Orders</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1 text-rose-600">
+              <h3 className="text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
                 {kpis.overdueOrders || 3}
               </h3>
               <p className="text-[11px] text-rose-500 font-semibold mt-1">Past expected delivery</p>
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis tickFormatter={(v) => `₹${(v / 100000).toFixed(1)}L`} tick={{ fontSize: 11 }} />
+                  <YAxis tickFormatter={(v: number) => `₹${(v / 100000).toFixed(1)}L`} tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(value: any) => [`₹${Number(value).toLocaleString("en-IN")}`, "Purchase Value"]} />
                   <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorSpend)" />
                 </AreaChart>

@@ -70,9 +70,9 @@ export async function GET() {
       include: { materials: { include: { poItems: true } } },
     });
 
-    const categoryData = categories.map((cat) => {
-      const totalVal = cat.materials.reduce((acc, m) => {
-        return acc + m.poItems.reduce((pAcc, p) => pAcc + p.totalAmount, 0);
+    const categoryData = categories.map((cat: any) => {
+      const totalVal = cat.materials.reduce((acc: number, m: any) => {
+        return acc + m.poItems.reduce((pAcc: number, p: any) => pAcc + p.totalAmount, 0);
       }, 0);
       return { name: cat.name, value: totalVal || 50000 + Math.random() * 200000 };
     });
@@ -82,9 +82,9 @@ export async function GET() {
       take: 5,
       include: { pos: true },
     });
-    const vendorData = vendors.map((v) => ({
+    const vendorData = vendors.map((v: any) => ({
       name: v.name.length > 15 ? v.name.substring(0, 15) + "..." : v.name,
-      value: v.pos.reduce((acc, p) => acc + p.grandTotal, 0) || 120000,
+      value: v.pos.reduce((acc: number, p: any) => acc + p.grandTotal, 0) || 120000,
     }));
 
     // Monthly Trend Dummy / Seed aggregate
