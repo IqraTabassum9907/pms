@@ -124,7 +124,15 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isMobileOpen?: boolean;
+  setIsMobileOpen?: (open: boolean) => void;
+}
+
+export function Sidebar({
+  isMobileOpen: externalMobileOpen,
+  setIsMobileOpen: setExternalMobileOpen,
+}: SidebarProps = {}) {
   const pathname = usePathname();
   const { hasPermission } = useAuth();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
@@ -134,7 +142,10 @@ export function Sidebar() {
     Reports: false,
     Administration: false,
   });
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [internalMobileOpen, setInternalMobileOpen] = useState(false);
+
+  const isMobileOpen = externalMobileOpen !== undefined ? externalMobileOpen : internalMobileOpen;
+  const setIsMobileOpen = setExternalMobileOpen || setInternalMobileOpen;
 
   const toggleGroup = (groupTitle: string) => {
     setExpandedGroups((prev) => ({ ...prev, [groupTitle]: !prev[groupTitle] }));

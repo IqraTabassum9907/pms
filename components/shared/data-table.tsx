@@ -65,9 +65,9 @@ export function DataTable<TData, TValue>({
   return (
     <div className="space-y-4">
       {/* Search & Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-3 w-full sm:w-auto flex-1">
-          <div className="relative w-full max-w-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto flex-1">
+          <div className="relative w-full sm:max-w-xs">
             <Input
               placeholder={searchPlaceholder}
               value={globalFilter ?? ""}
@@ -77,7 +77,7 @@ export function DataTable<TData, TValue>({
           </div>
 
           {filterOptions.length > 0 && (
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <Select
                 value={selectedFilter}
                 onChange={(e) => setSelectedFilter(e.target.value)}
@@ -97,7 +97,7 @@ export function DataTable<TData, TValue>({
                 setGlobalFilter("");
                 setSelectedFilter("ALL");
               }}
-              className="text-slate-500 hover:text-slate-700 dark:text-slate-400"
+              className="text-slate-500 hover:text-slate-700 dark:text-slate-400 self-start sm:self-auto"
             >
               <X className="w-4 h-4 mr-1" />
               Clear
@@ -105,7 +105,7 @@ export function DataTable<TData, TValue>({
           )}
         </div>
 
-        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium self-end md:self-auto shrink-0">
           Showing {table.getFilteredRowModel().rows.length} records
         </div>
       </div>

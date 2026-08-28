@@ -12,6 +12,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { isLoading } = useAuth();
+  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
 
   if (isLoading) {
     return (
@@ -23,10 +24,10 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
-      <Sidebar />
+      <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
       <div className="flex-1 flex flex-col min-w-0">
-        <Header />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+        <Header onOpenMobileMenu={() => setIsMobileOpen(true)} />
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-4 sm:space-y-6">
           {children}
         </main>
       </div>

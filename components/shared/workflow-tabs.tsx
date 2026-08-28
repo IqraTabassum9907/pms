@@ -18,11 +18,11 @@ export function WorkflowTabs({
   historyCount,
 }: WorkflowTabsProps) {
   return (
-    <div className="flex items-center space-x-1 border-b border-slate-200 dark:border-slate-800 mb-4">
+    <div className="flex items-center space-x-1 border-b border-slate-200 dark:border-slate-800 mb-4 overflow-x-auto no-scrollbar whitespace-nowrap">
       <button
         onClick={() => onTabChange("pending")}
         className={clsx(
-          "flex items-center space-x-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all cursor-pointer",
+          "flex items-center space-x-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-all shrink-0 cursor-pointer",
           activeTab === "pending"
             ? "border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400"
             : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
@@ -47,7 +47,7 @@ export function WorkflowTabs({
       <button
         onClick={() => onTabChange("history")}
         className={clsx(
-          "flex items-center space-x-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all cursor-pointer",
+          "flex items-center space-x-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-all shrink-0 cursor-pointer",
           activeTab === "history"
             ? "border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400"
             : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
