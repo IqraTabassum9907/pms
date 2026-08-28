@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db/prisma";
+// Mock implementations — no database needed on Vercel
 
 export async function createAuditLog({
   userEmail,
@@ -21,23 +21,9 @@ export async function createAuditLog({
   newStatus?: string | null;
   details?: string | null;
 }) {
-  try {
-    return await prisma.auditLog.create({
-      data: {
-        userEmail,
-        userName,
-        userRole,
-        action,
-        entity,
-        entityId,
-        previousStatus,
-        newStatus,
-        details,
-      },
-    });
-  } catch (error) {
-    console.error("Failed to record audit log:", error);
-  }
+  // No-op in mock mode — log to console only
+  console.log(`[AUDIT] ${userName} (${userRole}) — ${action} on ${entity}:${entityId} [${previousStatus} → ${newStatus}]`);
+  return { id: `al-${Date.now()}`, userEmail, userName, userRole, action, entity, entityId, previousStatus, newStatus, details, createdAt: new Date().toISOString() };
 }
 
 export async function createNotification({
@@ -53,17 +39,7 @@ export async function createNotification({
   recipientRole?: string;
   linkUrl?: string;
 }) {
-  try {
-    return await prisma.notification.create({
-      data: {
-        title,
-        message,
-        type,
-        recipientRole,
-        linkUrl,
-      },
-    });
-  } catch (error) {
-    console.error("Failed to create notification:", error);
-  }
+  // No-op in mock mode — log to console only
+  console.log(`[NOTIFICATION] [${type}] ${title}: ${message}`);
+  return { id: `n-${Date.now()}`, title, message, type, recipientRole, linkUrl, isRead: false, createdAt: new Date().toISOString() };
 }

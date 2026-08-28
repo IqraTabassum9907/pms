@@ -1,145 +1,129 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
+import {
+  MOCK_VENDORS,
+  MOCK_MATERIALS,
+  MOCK_CATEGORIES,
+  MOCK_UNITS,
+  MOCK_WAREHOUSES,
+  MOCK_DEPARTMENTS,
+  MOCK_EMPLOYEES,
+} from "@/lib/mock-data";
+
+const MOCK_TAX = [
+  { id: "tax1", name: "GST 5%", rate: 5, type: "GST" },
+  { id: "tax2", name: "GST 12%", rate: 12, type: "GST" },
+  { id: "tax3", name: "GST 18%", rate: 18, type: "GST" },
+  { id: "tax4", name: "GST 28%", rate: 28, type: "GST" },
+];
+
+const MOCK_PAYMENT_TERMS = [
+  { id: "pt1", name: "Advance 100%", days: 0, description: "Full advance payment required" },
+  { id: "pt2", name: "Advance 50%", days: 0, description: "50% advance, 50% on delivery" },
+  { id: "pt3", name: "Net 30 Days", days: 30, description: "Payment within 30 days of invoice" },
+  { id: "pt4", name: "Net 45 Days", days: 45, description: "Payment within 45 days of invoice" },
+  { id: "pt5", name: "Net 60 Days", days: 60, description: "Payment within 60 days of invoice" },
+];
+
+const MOCK_DELIVERY_TERMS = [
+  { id: "dt1", name: "FOR Destination", description: "Freight On Road to destination" },
+  { id: "dt2", name: "Ex-Works", description: "Buyer arranges transport from factory" },
+  { id: "dt3", name: "CIF", description: "Cost, Insurance, Freight included" },
+  { id: "dt4", name: "FOB", description: "Free On Board at origin port" },
+];
+
+const MOCK_TAT = [
+  { id: "tat1", processName: "Indent Creation to Approval", targetDays: 2, warningDays: 3 },
+  { id: "tat2", processName: "Quotation Collection", targetDays: 5, warningDays: 7 },
+  { id: "tat3", processName: "PO Creation to Approval", targetDays: 1, warningDays: 2 },
+  { id: "tat4", processName: "PO to Delivery", targetDays: 14, warningDays: 21 },
+  { id: "tat5", processName: "GRN to Payment", targetDays: 30, warningDays: 45 },
+];
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const entity = searchParams.get("entity") || "all";
 
-  try {
-    if (entity === "vendors") {
-      const vendors = await prisma.vendor.findMany({ orderBy: { name: "asc" } });
-      return NextResponse.json(vendors);
-    }
-    if (entity === "materials") {
-      const materials = await prisma.material.findMany({
-        orderBy: { name: "asc" },
-        include: { category: true, unit: true },
-      });
-      return NextResponse.json(materials);
-    }
-    if (entity === "categories") {
-      const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
-      return NextResponse.json(categories);
-    }
-    if (entity === "units") {
-      const units = await prisma.unit.findMany({ orderBy: { name: "asc" } });
-      return NextResponse.json(units);
-    }
-    if (entity === "warehouses") {
-      const warehouses = await prisma.warehouse.findMany({ orderBy: { name: "asc" } });
-      return NextResponse.json(warehouses);
-    }
-    if (entity === "departments") {
-      const departments = await prisma.department.findMany({ orderBy: { name: "asc" } });
-      return NextResponse.json(departments);
-    }
-    if (entity === "employees") {
-      const employees = await prisma.employee.findMany({ orderBy: { name: "asc" } });
-      return NextResponse.json(employees);
-    }
-    if (entity === "tax") {
-      const tax = await prisma.taxGST.findMany();
-      return NextResponse.json(tax);
-    }
-    if (entity === "payment-terms") {
-      const paymentTerms = await prisma.paymentTerm.findMany();
-      return NextResponse.json(paymentTerms);
-    }
-    if (entity === "delivery-terms") {
-      const deliveryTerms = await prisma.deliveryTerm.findMany();
-      return NextResponse.json(deliveryTerms);
-    }
-    if (entity === "tat") {
-      const tat = await prisma.tATConfiguration.findMany();
-      return NextResponse.json(tat);
-    }
+  if (entity === "vendors") return NextResponse.json(MOCK_VENDORS);
+  if (entity === "materials") return NextResponse.json(MOCK_MATERIALS);
+  if (entity === "categories") return NextResponse.json(MOCK_CATEGORIES);
+  if (entity === "units") return NextResponse.json(MOCK_UNITS);
+  if (entity === "warehouses") return NextResponse.json(MOCK_WAREHOUSES);
+  if (entity === "departments") return NextResponse.json(MOCK_DEPARTMENTS);
+  if (entity === "employees") return NextResponse.json(MOCK_EMPLOYEES);
+  if (entity === "tax") return NextResponse.json(MOCK_TAX);
+  if (entity === "payment-terms") return NextResponse.json(MOCK_PAYMENT_TERMS);
+  if (entity === "delivery-terms") return NextResponse.json(MOCK_DELIVERY_TERMS);
+  if (entity === "tat") return NextResponse.json(MOCK_TAT);
 
-    // Default fetch all core master collections
-    const [vendors, materials, categories, units, warehouses, departments, employees, tax, paymentTerms, deliveryTerms, tat] =
-      await Promise.all([
-        prisma.vendor.findMany({ orderBy: { name: "asc" } }),
-        prisma.material.findMany({ orderBy: { name: "asc" }, include: { category: true, unit: true } }),
-        prisma.category.findMany({ orderBy: { name: "asc" } }),
-        prisma.unit.findMany({ orderBy: { name: "asc" } }),
-        prisma.warehouse.findMany({ orderBy: { name: "asc" } }),
-        prisma.department.findMany({ orderBy: { name: "asc" } }),
-        prisma.employee.findMany({ orderBy: { name: "asc" } }),
-        prisma.taxGST.findMany(),
-        prisma.paymentTerm.findMany(),
-        prisma.deliveryTerm.findMany(),
-        prisma.tATConfiguration.findMany(),
-      ]);
-
-    return NextResponse.json({
-      vendors,
-      materials,
-      categories,
-      units,
-      warehouses,
-      departments,
-      employees,
-      tax,
-      paymentTerms,
-      deliveryTerms,
-      tat,
-    });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch master data" }, { status: 500 });
-  }
+  return NextResponse.json({
+    vendors: MOCK_VENDORS,
+    materials: MOCK_MATERIALS,
+    categories: MOCK_CATEGORIES,
+    units: MOCK_UNITS,
+    warehouses: MOCK_WAREHOUSES,
+    departments: MOCK_DEPARTMENTS,
+    employees: MOCK_EMPLOYEES,
+    tax: MOCK_TAX,
+    paymentTerms: MOCK_PAYMENT_TERMS,
+    deliveryTerms: MOCK_DELIVERY_TERMS,
+    tat: MOCK_TAT,
+  });
 }
 
 export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { entity, data } = body;
+  const body = await req.json();
+  const { entity, data } = body;
+  const id = `${entity}-${Date.now()}`;
 
-    if (entity === "vendors") {
-      const count = await prisma.vendor.count();
-      const code = `VEN-${String(count + 1).padStart(3, "0")}`;
-      const vendor = await prisma.vendor.create({
-        data: {
-          code,
-          name: data.name,
-          contactPerson: data.contactPerson,
-          email: data.email,
-          phone: data.phone,
-          address: data.address || "Industrial Area",
-          city: data.city || "Mumbai",
-          state: data.state || "Maharashtra",
-          gstNumber: data.gstNumber || "27AAACB1234A1Z5",
-          pan: data.pan || "AAACB1234A",
-          bankName: data.bankName || "HDFC Bank",
-          accountNumber: data.accountNumber || "502000000000",
-          ifsc: data.ifsc || "HDFC0000123",
-          paymentTerms: data.paymentTerms || "Net 30 Days",
-          creditDays: Number(data.creditDays) || 30,
-          rating: Number(data.rating) || 4.5,
-          status: "ACTIVE",
-        },
-      });
-      return NextResponse.json(vendor, { status: 201 });
-    }
-
-    if (entity === "materials") {
-      const count = await prisma.material.count();
-      const code = `MAT-${String(count + 1).padStart(3, "0")}`;
-      const material = await prisma.material.create({
-        data: {
-          code,
-          name: data.name,
-          description: data.description || null,
-          categoryId: data.categoryId,
-          unitId: data.unitId,
-          estimatedRate: Number(data.estimatedRate) || 100,
-          gstRate: Number(data.gstRate) || 18,
-          reorderLevel: Number(data.reorderLevel) || 100,
-        },
-      });
-      return NextResponse.json(material, { status: 201 });
-    }
-
-    return NextResponse.json({ error: "Unsupported entity" }, { status: 400 });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to create master record" }, { status: 500 });
+  if (entity === "vendors") {
+    const count = MOCK_VENDORS.length + 1;
+    return NextResponse.json(
+      {
+        id,
+        code: `VEN-${String(count).padStart(3, "0")}`,
+        name: data.name,
+        contactPerson: data.contactPerson,
+        email: data.email,
+        phone: data.phone,
+        address: data.address || "Industrial Area",
+        city: data.city || "Mumbai",
+        state: data.state || "Maharashtra",
+        gstNumber: data.gstNumber || "27AAACX0000X1Z5",
+        pan: data.pan || "AAACX0000X",
+        bankName: data.bankName || "HDFC Bank",
+        accountNumber: data.accountNumber || "502000000001",
+        ifsc: data.ifsc || "HDFC0000001",
+        paymentTerms: data.paymentTerms || "Net 30 Days",
+        creditDays: Number(data.creditDays) || 30,
+        rating: Number(data.rating) || 4.0,
+        status: "ACTIVE",
+        createdAt: new Date().toISOString(),
+      },
+      { status: 201 }
+    );
   }
+
+  if (entity === "materials") {
+    const count = MOCK_MATERIALS.length + 1;
+    const category = MOCK_CATEGORIES.find((c) => c.id === data.categoryId) || MOCK_CATEGORIES[0];
+    const unit = MOCK_UNITS.find((u) => u.id === data.unitId) || MOCK_UNITS[0];
+    return NextResponse.json(
+      {
+        id,
+        code: `MAT-${String(count).padStart(3, "0")}`,
+        name: data.name,
+        description: data.description || null,
+        categoryId: data.categoryId,
+        category,
+        unitId: data.unitId,
+        unit,
+        estimatedRate: Number(data.estimatedRate) || 100,
+        gstRate: Number(data.gstRate) || 18,
+        reorderLevel: Number(data.reorderLevel) || 100,
+      },
+      { status: 201 }
+    );
+  }
+
+  return NextResponse.json({ error: "Unsupported entity" }, { status: 400 });
 }
