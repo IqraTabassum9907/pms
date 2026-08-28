@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { MOCK_RECEIPTS, MOCK_VENDORS, MOCK_WAREHOUSES, MOCK_MATERIALS } from "@/lib/mock-data";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   return NextResponse.json(MOCK_RECEIPTS);
 }

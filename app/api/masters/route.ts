@@ -9,6 +9,8 @@ import {
   MOCK_EMPLOYEES,
 } from "@/lib/mock-data";
 
+export const dynamic = "force-dynamic";
+
 const MOCK_TAX = [
   { id: "tax1", name: "GST 5%", rate: 5, type: "GST" },
   { id: "tax2", name: "GST 12%", rate: 12, type: "GST" },
