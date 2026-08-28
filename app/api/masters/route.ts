@@ -73,14 +73,14 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { entity, data } = body;
-  const id = `${entity}-${Date.now()}`;
+  try {
+    const body = await req.json();
+    const { entity, data } = body;
+    const id = `${entity}-${Date.now()}`;
 
-  if (entity === "vendors") {
-    const count = MOCK_VENDORS.length + 1;
-    return NextResponse.json(
-      {
+    if (entity === "vendors") {
+      const count = MOCK_VENDORS.length + 1;
+      const newVendor = {
         id,
         code: `VEN-${String(count).padStart(3, "0")}`,
         name: data.name,
@@ -100,17 +100,16 @@ export async function POST(req: Request) {
         rating: Number(data.rating) || 4.0,
         status: "ACTIVE",
         createdAt: new Date().toISOString(),
-      },
-      { status: 201 }
-    );
-  }
+      };
+      MOCK_VENDORS.push(newVendor);
+      return NextResponse.json(newVendor, { status: 201 });
+    }
 
-  if (entity === "materials") {
-    const count = MOCK_MATERIALS.length + 1;
-    const category = MOCK_CATEGORIES.find((c) => c.id === data.categoryId) || MOCK_CATEGORIES[0];
-    const unit = MOCK_UNITS.find((u) => u.id === data.unitId) || MOCK_UNITS[0];
-    return NextResponse.json(
-      {
+    if (entity === "materials") {
+      const count = MOCK_MATERIALS.length + 1;
+      const category = MOCK_CATEGORIES.find((c) => c.id === data.categoryId) || MOCK_CATEGORIES[0];
+      const unit = MOCK_UNITS.find((u) => u.id === data.unitId) || MOCK_UNITS[0];
+      const newMaterial = {
         id,
         code: `MAT-${String(count).padStart(3, "0")}`,
         name: data.name,
@@ -122,10 +121,14 @@ export async function POST(req: Request) {
         estimatedRate: Number(data.estimatedRate) || 100,
         gstRate: Number(data.gstRate) || 18,
         reorderLevel: Number(data.reorderLevel) || 100,
-      },
-      { status: 201 }
-    );
-  }
+      };
+      MOCK_MATERIALS.push(newMaterial);
+      return NextResponse.json(newMaterial, { status: 201 });
+    }
 
-  return NextResponse.json({ error: "Unsupported entity" }, { status: 400 });
+    return NextResponse.json({ error: "Unsupported entity" }, { status: 400 });
+  } catch (error) {
+    console.error("Error creating master entity:", error);
+    return NextResponse.json({ error: "Failed to create master record" }, { status: 500 });
+  }
 }
