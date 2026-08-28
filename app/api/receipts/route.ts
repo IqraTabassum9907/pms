@@ -84,7 +84,7 @@ export async function POST(req: Request) {
     MOCK_RECEIPTS.unshift(newReceipt);
 
     // Update Stock & Inventory in memory
-    receiptItems.forEach((ri) => {
+    receiptItems.forEach((ri: any) => {
       const stockItem = MOCK_STOCK.find((s) => s.materialId === ri.materialId);
       if (stockItem) {
         stockItem.receivedStock += ri.acceptedQty;

@@ -183,7 +183,7 @@ export const MOCK_EMPLOYEES = [
   { id: "emp5", employeeId: "EMP-005", name: "Suresh Kumar", email: "suresh@purchaseflow.com", department: "Production", designation: "Production Head", role: "DEPARTMENT_HEAD" },
 ];
 
-export const MOCK_INDENTS = [
+export const MOCK_INDENTS: any[] = [
   {
     id: "ind1",
     indentNo: "IND-2026-0001",
@@ -293,7 +293,7 @@ export const MOCK_INDENTS = [
   },
 ];
 
-export const MOCK_PURCHASE_ORDERS = [
+export const MOCK_PURCHASE_ORDERS: any[] = [
   {
     id: "po1",
     poNo: "PO-2026-0001",
@@ -466,7 +466,7 @@ export const MOCK_PURCHASE_ORDERS = [
   },
 ];
 
-export const MOCK_QUOTATIONS = [
+export const MOCK_QUOTATIONS: any[] = [
   {
     id: "q1",
     quotationNo: "QUO-2026-0001",
@@ -559,7 +559,7 @@ export const MOCK_QUOTATIONS = [
   },
 ];
 
-export const MOCK_PAYMENTS = [
+export const MOCK_PAYMENTS: any[] = [
   {
     id: "pay1",
     paymentNo: "PAY-2026-0001",
@@ -640,7 +640,7 @@ export const MOCK_PAYMENTS = [
   },
 ];
 
-export const MOCK_RECEIPTS = [
+export const MOCK_RECEIPTS: any[] = [
   {
     id: "grn1",
     grnNo: "GRN-2026-0001",
@@ -689,7 +689,7 @@ export const MOCK_RECEIPTS = [
   },
 ];
 
-export const MOCK_STOCK = [
+export const MOCK_STOCK: any[] = [
   { id: "inv1", materialId: "mat1", material: { ...MOCK_MATERIALS[0], category: MOCK_CATEGORIES[0] }, warehouseId: "wh1", warehouse: MOCK_WAREHOUSES[0], unitId: "u7", unit: MOCK_UNITS[6], openingStock: 20, receivedStock: 5, issuedStock: 8, reservedStock: 2, availableStock: 15 },
   { id: "inv2", materialId: "mat2", material: { ...MOCK_MATERIALS[1], category: MOCK_CATEGORIES[1] }, warehouseId: "wh1", warehouse: MOCK_WAREHOUSES[0], unitId: "u1", unit: MOCK_UNITS[0], openingStock: 500, receivedStock: 195, issuedStock: 200, reservedStock: 50, availableStock: 445 },
   { id: "inv3", materialId: "mat3", material: { ...MOCK_MATERIALS[2], category: MOCK_CATEGORIES[2] }, warehouseId: "wh1", warehouse: MOCK_WAREHOUSES[0], unitId: "u2", unit: MOCK_UNITS[1], openingStock: 600, receivedStock: 0, issuedStock: 150, reservedStock: 100, availableStock: 350 },
@@ -700,7 +700,7 @@ export const MOCK_STOCK = [
   { id: "inv8", materialId: "mat8", material: { ...MOCK_MATERIALS[7], category: MOCK_CATEGORIES[1] }, warehouseId: "wh1", warehouse: MOCK_WAREHOUSES[0], unitId: "u2", unit: MOCK_UNITS[1], openingStock: 300, receivedStock: 0, issuedStock: 80, reservedStock: 50, availableStock: 170 },
 ];
 
-export const MOCK_STOCK_MOVEMENTS = [
+export const MOCK_STOCK_MOVEMENTS: any[] = [
   { id: "sm1", materialId: "mat1", material: MOCK_MATERIALS[0], warehouseId: "wh1", warehouse: MOCK_WAREHOUSES[0], movementType: "INBOUND_GRN", quantity: 5, referenceType: "GRN", referenceNo: "GRN-2026-0001", createdByName: "Ramesh Gupta", remarks: "Steel plates received against PO-2026-0001", movementDate: "2026-08-19T11:00:00Z" },
   { id: "sm2", materialId: "mat2", material: MOCK_MATERIALS[1], warehouseId: "wh1", warehouse: MOCK_WAREHOUSES[0], movementType: "INBOUND_GRN", quantity: 195, referenceType: "GRN", referenceNo: "GRN-2026-0002", createdByName: "Ramesh Gupta", remarks: "Copper wires partial receipt", movementDate: "2026-08-26T09:00:00Z" },
   { id: "sm3", materialId: "mat1", material: MOCK_MATERIALS[0], warehouseId: "wh1", warehouse: MOCK_WAREHOUSES[0], movementType: "OUTBOUND_ISSUE", quantity: 3, referenceType: "ISSUE", referenceNo: "ISS-2026-001", createdByName: "Suresh Kumar", remarks: "Issued to production floor", movementDate: "2026-08-22T08:00:00Z" },
@@ -708,7 +708,7 @@ export const MOCK_STOCK_MOVEMENTS = [
   { id: "sm5", materialId: "mat3", material: MOCK_MATERIALS[2], warehouseId: "wh1", warehouse: MOCK_WAREHOUSES[0], movementType: "OUTBOUND_ISSUE", quantity: 50, referenceType: "ISSUE", referenceNo: "ISS-2026-003", createdByName: "Ravi Prasad", remarks: "Bearings for motor overhaul", movementDate: "2026-08-23T10:00:00Z" },
 ];
 
-export const MOCK_LOGISTICS = [
+export const MOCK_LOGISTICS: any[] = [
   {
     id: "log1",
     poId: "po1",
@@ -765,7 +765,7 @@ export const MOCK_LOGISTICS = [
   },
 ];
 
-export const MOCK_NOTIFICATIONS = [
+export const MOCK_NOTIFICATIONS: any[] = [
   { id: "n1", title: "New Indent IND-2026-0005 Submitted", message: "Indent IND-2026-0005 submitted by Dr. Anand Rao awaiting department approval.", type: "INFO", recipientRole: "DEPARTMENT_HEAD", isRead: false, linkUrl: "/purchase/approval", createdAt: "2026-08-18T08:05:00Z" },
   { id: "n2", title: "PO PO-2026-0003 Pending Approval", message: "Purchase order PO-2026-0003 worth ₹3,08,200 is awaiting your approval.", type: "URGENT", recipientRole: "PURCHASE_MANAGER", isRead: false, linkUrl: "/purchase/po-approval", createdAt: "2026-08-15T11:15:00Z" },
   { id: "n3", title: "Payment Overdue Alert", message: "Payment PAY-2026-0003 for ABB India (₹5,02,500) is due in 3 days.", type: "WARNING", recipientRole: "ACCOUNTS", isRead: false, linkUrl: "/purchase/payments", createdAt: "2026-08-17T09:00:00Z" },
@@ -774,7 +774,7 @@ export const MOCK_NOTIFICATIONS = [
   { id: "n6", title: "Low Stock Alert — Ball Bearings", message: "Ball Bearings (6205) stock at 350 units — approaching reorder level of 200.", type: "INFO", recipientRole: "PURCHASE_MANAGER", isRead: false, linkUrl: "/purchase/stock", createdAt: "2026-08-27T08:00:00Z" },
 ];
 
-export const MOCK_AUDIT_LOGS = [
+export const MOCK_AUDIT_LOGS: any[] = [
   { id: "al1", userEmail: "executive@purchaseflow.com", userName: "Amit Patel", userRole: "PURCHASE_EXECUTIVE", action: "Created Indent", entity: "PurchaseIndent", entityId: "IND-2026-0001", previousStatus: "NONE", newStatus: "SUBMITTED", details: "Created purchase indent IND-2026-0001 with total estimate ₹4,25,000", ipAddress: "192.168.1.10", createdAt: "2026-08-01T09:00:00Z" },
   { id: "al2", userEmail: "manager@purchaseflow.com", userName: "Kavita Singh", userRole: "PURCHASE_MANAGER", action: "Approved Indent", entity: "PurchaseIndent", entityId: "IND-2026-0001", previousStatus: "SUBMITTED", newStatus: "APPROVED", details: "Approved indent IND-2026-0001 for production raw materials", ipAddress: "192.168.1.11", createdAt: "2026-08-03T10:00:00Z" },
   { id: "al3", userEmail: "executive@purchaseflow.com", userName: "Amit Patel", userRole: "PURCHASE_EXECUTIVE", action: "Created PO", entity: "PurchaseOrder", entityId: "PO-2026-0001", previousStatus: "NONE", newStatus: "PENDING_APPROVAL", details: "Created Purchase Order PO-2026-0001 for Tata Steel Ltd totaling ₹5,16,500", ipAddress: "192.168.1.10", createdAt: "2026-08-05T10:00:00Z" },
@@ -785,12 +785,12 @@ export const MOCK_AUDIT_LOGS = [
   { id: "al8", userEmail: "executive@purchaseflow.com", userName: "Amit Patel", userRole: "PURCHASE_EXECUTIVE", action: "Created PO", entity: "PurchaseOrder", entityId: "PO-2026-0004", previousStatus: "NONE", newStatus: "PENDING_APPROVAL", details: "Created PO PO-2026-0004 for ABB India totaling ₹10,05,000", ipAddress: "192.168.1.10", createdAt: "2026-08-18T08:30:00Z" },
 ];
 
-export const MOCK_FOLLOW_UPS = [
+export const MOCK_FOLLOW_UPS: any[] = [
   { id: "fu1", entityType: "PO", entityId: "po3", entityNo: "PO-2026-0003", vendorId: "v3", vendor: MOCK_VENDORS[2], subject: "Follow up on PO approval and delivery timeline", message: "Please confirm delivery schedule for pending order", status: "PENDING", dueDate: "2026-08-28T00:00:00Z", assignedTo: "Amit Patel", createdAt: "2026-08-16T12:00:00Z" },
   { id: "fu2", entityType: "PAYMENT", entityId: "pay2", entityNo: "PAY-2026-0002", vendorId: "v2", vendor: MOCK_VENDORS[1], subject: "Balance payment reminder to Reliance Industries", message: "Balance ₹2,22,430 due by Oct 12. Please confirm receipt details.", status: "PENDING", dueDate: "2026-10-08T00:00:00Z", assignedTo: "Sunita Deshmukh", createdAt: "2026-08-30T10:00:00Z" },
 ];
 
-export const MOCK_RETURNS = [
+export const MOCK_RETURNS: any[] = [
   {
     id: "ret1",
     returnNo: "RET-2026-0001",
