@@ -27,7 +27,7 @@ export default function DashboardLayout({
       <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header onOpenMobileMenu={() => setIsMobileOpen(true)} />
-        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-4 sm:space-y-6">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 w-full space-y-4 sm:space-y-6 page-enter">
           {children}
         </main>
       </div>

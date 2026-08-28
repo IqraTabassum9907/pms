@@ -20,14 +20,21 @@ export default function VendorSelectionPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [indRes, quoRes] = await Promise.all([
+      const [indRes, quoRes, poRes] = await Promise.all([
         fetch("/api/indents"),
         fetch("/api/quotations"),
+        fetch("/api/pos"),
       ]);
       const indData = await indRes.json();
       const quoData = await quoRes.json();
+      const poData = await poRes.json();
 
-      const appIndents = (Array.isArray(indData) ? indData : []).filter((i) => i.status === "APPROVED");
+      // Once a PO has been raised for an indent, vendor selection for it is done —
+      // drop it from the comparison list so it doesn't linger here indefinitely.
+      const indentIdsWithPO = new Set((Array.isArray(poData) ? poData : []).map((p: any) => p.indentId).filter(Boolean));
+      const appIndents = (Array.isArray(indData) ? indData : []).filter(
+        (i) => i.status === "APPROVED" && !indentIdsWithPO.has(i.id)
+      );
       setIndents(appIndents);
       setQuotations(Array.isArray(quoData) ? quoData : []);
 

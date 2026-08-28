@@ -12,7 +12,10 @@ export async function PATCH(
     const body = await req.json();
 
     const indentIndex = MOCK_INDENTS.findIndex((ind) => ind.id === id || ind.indentNo === id);
-    const existing = indentIndex !== -1 ? MOCK_INDENTS[indentIndex] : MOCK_INDENTS[0];
+    if (indentIndex === -1) {
+      return NextResponse.json({ error: `Indent ${id} not found` }, { status: 404 });
+    }
+    const existing = MOCK_INDENTS[indentIndex];
     const { action, comments, userName, userRole, userEmail } = body;
 
     let newStatus = existing.status;
@@ -46,9 +49,7 @@ export async function PATCH(
     };
 
     // Mutate in-memory array
-    if (indentIndex !== -1) {
-      MOCK_INDENTS[indentIndex] = updated;
-    }
+    MOCK_INDENTS[indentIndex] = updated;
 
     MOCK_AUDIT_LOGS.unshift({
       id: `al-${Date.now()}`,

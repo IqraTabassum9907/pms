@@ -22,20 +22,20 @@ export function WorkflowTabs({
       <button
         onClick={() => onTabChange("pending")}
         className={clsx(
-          "flex items-center space-x-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-all shrink-0 cursor-pointer",
+          "flex items-center space-x-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-all shrink-0 cursor-pointer",
           activeTab === "pending"
-            ? "border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400"
+            ? "border-slate-900 text-slate-900 dark:border-slate-100 dark:text-slate-100 font-semibold"
             : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
         )}
       >
-        <Clock className="w-4 h-4" />
+        <Clock className="w-3.5 h-3.5" />
         <span>Pending Actions</span>
         {pendingCount !== undefined && (
           <span
             className={clsx(
-              "ml-1.5 px-2 py-0.5 text-xs font-bold rounded-full",
+              "ml-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-full",
               activeTab === "pending"
-                ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200"
+                ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
                 : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
             )}
           >
@@ -47,20 +47,20 @@ export function WorkflowTabs({
       <button
         onClick={() => onTabChange("history")}
         className={clsx(
-          "flex items-center space-x-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 transition-all shrink-0 cursor-pointer",
+          "flex items-center space-x-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-all shrink-0 cursor-pointer",
           activeTab === "history"
-            ? "border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400"
+            ? "border-slate-900 text-slate-900 dark:border-slate-100 dark:text-slate-100 font-semibold"
             : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
         )}
       >
-        <HistoryIcon className="w-4 h-4" />
+        <HistoryIcon className="w-3.5 h-3.5" />
         <span>Completed History</span>
         {historyCount !== undefined && (
           <span
             className={clsx(
-              "ml-1.5 px-2 py-0.5 text-xs font-bold rounded-full",
+              "ml-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-full",
               activeTab === "history"
-                ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200"
+                ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
                 : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
             )}
           >

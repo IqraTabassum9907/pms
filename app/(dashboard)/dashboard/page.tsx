@@ -35,7 +35,7 @@ import {
   Cell,
 } from "recharts";
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+const COLORS = ["#0f172a", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1"];
 
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
@@ -63,149 +63,149 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-950 p-6 rounded-2xl text-white shadow-xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl text-slate-900 dark:text-slate-100 shadow-2xs">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight">
-            PurchaseFlow Enterprise Dashboard
+          <h1 className="text-xl font-bold tracking-tight">
+            Purchase Management Overview
           </h1>
-          <p className="text-xs text-blue-200 mt-1 max-w-xl">
-            Real-time procurement metrics, pending approvals, vendor performance, stock balance, and financial ledger.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-xl">
+            Real-time procurement KPIs, pending stage approvals, vendor performance, and budget utilization.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link href="/purchase/indent">
-            <Button variant="primary" size="sm" className="bg-blue-600 hover:bg-blue-500 border-none font-bold">
-              <Plus className="w-4 h-4 mr-1.5" /> Create Indent
+            <Button variant="primary" size="sm" className="font-semibold text-xs">
+              <Plus className="w-3.5 h-3.5 mr-1" /> New Indent
             </Button>
           </Link>
           <Link href="/purchase/po">
-            <Button variant="outline" size="sm" className="border-slate-700 text-white hover:bg-slate-800">
+            <Button variant="outline" size="sm" className="text-xs">
               Create PO
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* 8 Enterprise KPI Cards (Requirement #5) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-600">
+      {/* 8 Enterprise KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Purchase Value</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                ₹{(kpis.totalPurchaseValue || 4520000).toLocaleString("en-IN")}
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Total Purchase Value</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                ₹{(kpis.totalPurchaseValue ?? 0).toLocaleString("en-IN")}
               </h3>
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center mt-1">
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center mt-1">
                 <TrendingUp className="w-3 h-3 mr-1" /> +12.4% vs last month
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
-              <DollarSign className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <DollarSign className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-amber-500">
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Indents</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {kpis.pendingIndents || 6}
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Pending Indents</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {kpis.pendingIndents ?? 0}
               </h3>
               <p className="text-[11px] text-slate-500 mt-1">Awaiting Dept Approval</p>
             </div>
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
-              <FileText className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <FileText className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-indigo-600">
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending PO Approvals</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {kpis.pendingPOs || 4}
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Pending PO Approvals</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {kpis.pendingPOs ?? 0}
               </h3>
               <p className="text-[11px] text-slate-500 mt-1">Multi-level clearance</p>
             </div>
-            <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
-              <Clock className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <Clock className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-emerald-600">
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Approved Active POs</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {kpis.approvedPOs || 12}
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Approved Active POs</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {kpis.approvedPOs ?? 0}
               </h3>
-              <p className="text-[11px] text-emerald-600 font-semibold mt-1">In progress & dispatched</p>
+              <p className="text-[11px] text-emerald-600 font-medium mt-1">Dispatched & active</p>
             </div>
-            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-600">
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Payments</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                ₹{(kpis.pendingPayments || 1850000).toLocaleString("en-IN")}
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Pending Payments</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                ₹{(kpis.pendingPayments ?? 0).toLocaleString("en-IN")}
               </h3>
               <p className="text-[11px] text-slate-500 mt-1">Unpaid vendor invoices</p>
             </div>
-            <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
-              <CreditCard className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <CreditCard className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-sky-600">
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Awaiting Material Receipt</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {kpis.materialAwaitingReceipt || 8}
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Awaiting Material Receipt</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {kpis.materialAwaitingReceipt ?? 0}
               </h3>
               <p className="text-[11px] text-slate-500 mt-1">Pending GRN entry</p>
             </div>
-            <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400">
-              <PackageCheck className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <PackageCheck className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-rose-600">
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Overdue Orders</p>
-              <h3 className="text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
-                {kpis.overdueOrders || 3}
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Overdue Orders</p>
+              <h3 className="text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5">
+                {kpis.overdueOrders ?? 0}
               </h3>
-              <p className="text-[11px] text-rose-500 font-semibold mt-1">Past expected delivery</p>
+              <p className="text-[11px] text-rose-500 font-medium mt-1">Past expected delivery</p>
             </div>
-            <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">
-              <AlertTriangle className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
+              <AlertTriangle className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-teal-600">
+        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Completed Purchases</p>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {kpis.completedPurchases || 15}
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Completed Purchases</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {kpis.completedPurchases ?? 0}
               </h3>
-              <p className="text-[11px] text-teal-600 font-semibold mt-1">GRN & Payment cleared</p>
+              <p className="text-[11px] text-slate-500 font-medium mt-1">GRN & Payment cleared</p>
             </div>
-            <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400">
-              <Boxes className="w-6 h-6" />
+            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <Boxes className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
@@ -295,7 +295,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    {kpis.pendingIndents || 6} Indents Waiting for Approval
+                    {kpis.pendingIndents ?? 0} Indents Waiting for Approval
                   </div>
                   <div className="text-[11px] text-slate-500">Requires department head sign-off</div>
                 </div>
@@ -331,7 +331,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    {kpis.pendingPOs || 4} POs Waiting for Multilevel Approval
+                    {kpis.pendingPOs ?? 0} POs Waiting for Multilevel Approval
                   </div>
                   <div className="text-[11px] text-slate-500">Level 1 - Level 4 clearance workflow</div>
                 </div>

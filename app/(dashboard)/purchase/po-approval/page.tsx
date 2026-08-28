@@ -1,22 +1,26 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { CheckCircle2, XCircle, Clock, ShieldCheck } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, ShieldCheck, Eye, ArrowRight, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DataTable } from "@/components/shared/data-table";
+import { WorkflowTabs } from "@/components/shared/workflow-tabs";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { useAuth } from "@/lib/auth/auth-context";
+import Link from "next/link";
 
 export default function POApprovalPage() {
   const { user } = useAuth();
   const [pos, setPos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
   const [selectedPo, setSelectedPo] = useState<any>(null);
 
   const [comments, setComments] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   const fetchPos = async () => {
     setLoading(true);
@@ -43,16 +47,22 @@ export default function POApprovalPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action,
-          comments,
-          userName: user?.name,
-          userRole: user?.role,
-          userEmail: user?.email,
+          comments: comments || (action === "APPROVE" ? "Approved by Purchase Manager." : "Rejected during approval review."),
+          userName: user?.name || "Kavita Singh",
+          userRole: user?.role || "PURCHASE_MANAGER",
+          userEmail: user?.email || "manager@purchaseflow.com",
         }),
       });
 
       if (res.ok) {
+        const updated = await res.json();
         setSelectedPo(null);
         setComments("");
+        setSuccessNotice(
+          action === "APPROVE"
+            ? `Purchase Order ${updated.poNo} approved successfully! Moved to History & advanced to PO Dispatch desk.`
+            : `Purchase Order ${updated.poNo} rejected.`
+        );
         fetchPos();
       }
     } catch (e) {
@@ -61,13 +71,15 @@ export default function POApprovalPage() {
     setIsProcessing(false);
   };
 
-  const pendingApprovalPos = pos.filter((p) => p.status === "PENDING_APPROVAL");
+  const pendingPos = pos.filter((p) => p.status === "PENDING_APPROVAL");
+  const historyPos = pos.filter((p) => ["APPROVED", "SENT", "IN_PROGRESS", "PARTIALLY_COMPLETED", "COMPLETED", "REJECTED", "CANCELLED"].includes(p.status));
+  const activeData = activeTab === "pending" ? pendingPos : historyPos;
 
   const columns = [
     {
       accessorKey: "poNo",
       header: "PO Number",
-      cell: ({ row }: any) => <span className="font-bold text-blue-600">{row.original.poNo}</span>,
+      cell: ({ row }: any) => <span className="font-bold text-blue-600 dark:text-blue-400">{row.original.poNo}</span>,
     },
     {
       accessorKey: "poDate",
@@ -76,15 +88,15 @@ export default function POApprovalPage() {
     },
     {
       accessorKey: "vendor",
-      header: "Vendor",
-      cell: ({ row }: any) => row.original.vendor?.name || "N/A",
+      header: "Supplier / Vendor",
+      cell: ({ row }: any) => <span className="font-semibold">{row.original.vendor?.name || "Vendor"}</span>,
     },
     {
       accessorKey: "approvalLevel",
-      header: "Approval Stage",
+      header: "Approval Level",
       cell: ({ row }: any) => (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
-          Level {row.original.approvalLevel} / 4
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+          Level {row.original.approvalLevel || 1} / 4
         </span>
       ),
     },
@@ -92,7 +104,9 @@ export default function POApprovalPage() {
       accessorKey: "grandTotal",
       header: "Grand Total",
       cell: ({ row }: any) => (
-        <span className="font-bold">₹{Number(row.original.grandTotal || 0).toLocaleString("en-IN")}</span>
+        <span className="font-bold text-slate-900 dark:text-slate-100">
+          ₹{Number(row.original.grandTotal || 0).toLocaleString("en-IN")}
+        </span>
       ),
     },
     {
@@ -104,14 +118,34 @@ export default function POApprovalPage() {
       id: "actions",
       header: "Action",
       cell: ({ row }: any) => (
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setSelectedPo(row.original)}
-          className="h-7 text-xs font-bold"
-        >
-          Review & Authorize
-        </Button>
+        activeTab === "pending" ? (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setSelectedPo(row.original)}
+            className="h-7 text-xs font-bold"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Review & Approve
+          </Button>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedPo(row.original)}
+              className="h-7 text-xs"
+            >
+              <Eye className="w-3.5 h-3.5 mr-1" /> View PO
+            </Button>
+            {row.original.status === "APPROVED" && (
+              <Link href="/purchase/po-dispatch">
+                <Button variant="secondary" size="sm" className="h-7 text-xs font-bold">
+                  <Send className="w-3.5 h-3.5 mr-1" /> Dispatch
+                </Button>
+              </Link>
+            )}
+          </div>
+        )
       ),
     },
   ];
@@ -120,69 +154,96 @@ export default function POApprovalPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Multilevel PO Approval Desk</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          4-Level approval workflow (Level 1: Purchase Mgr -&gt; Level 2: Dept Head -&gt; Level 3: Finance -&gt; Level 4: Admin).
-        </p>
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Purchase Order Approval Desk</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Authorize commercial purchase commitments, verify budget allocations, and trigger vendor dispatch workflows.
+          </p>
+        </div>
+        <Link href="/purchase/po-dispatch">
+          <Button variant="outline" className="text-xs">
+            Go to PO Dispatch <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
+        </Link>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={pendingApprovalPos}
-        searchPlaceholder="Search pending PO approvals..."
+      {/* Success Notification Banner */}
+      {successNotice && (
+        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-200">
+          <span>{successNotice}</span>
+          <button onClick={() => setSuccessNotice(null)} className="font-bold text-emerald-600 ml-4 hover:underline">
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Workflow Tabs */}
+      <WorkflowTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        pendingCount={pendingPos.length}
+        historyCount={historyPos.length}
       />
 
+      {/* Data Table */}
+      <DataTable
+        columns={columns}
+        data={activeData}
+        searchPlaceholder="Search POs for approval (PO-2026-..., Vendor)..."
+      />
+
+      {/* Review Modal Form */}
       {selectedPo && (
         <Modal
           isOpen={!!selectedPo}
           onClose={() => setSelectedPo(null)}
-          title={`PO Authorization: ${selectedPo.poNo}`}
-          subtitle={`Current Approval Level: Level ${selectedPo.approvalLevel} of 4`}
+          title={`PO Approval Review: ${selectedPo.poNo}`}
+          subtitle={`Supplier: ${selectedPo.vendor?.name} | Value: ₹${Number(selectedPo.grandTotal || 0).toLocaleString("en-IN")}`}
           maxWidth="4xl"
         >
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+          <div className="space-y-6 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
               <div>
-                <span className="text-slate-400 font-bold uppercase block">Vendor:</span>
-                <span className="font-bold">{selectedPo.vendor?.name}</span>
+                <span className="text-[11px] text-slate-400 font-bold uppercase block">Supplier:</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100">{selectedPo.vendor?.name}</span>
               </div>
               <div>
-                <span className="text-slate-400 font-bold uppercase block">Payment Terms:</span>
+                <span className="text-[11px] text-slate-400 font-bold uppercase block">Payment Terms:</span>
                 <span className="font-bold">{selectedPo.paymentTerms}</span>
               </div>
               <div>
-                <span className="text-slate-400 font-bold uppercase block">Delivery Terms:</span>
+                <span className="text-[11px] text-slate-400 font-bold uppercase block">Delivery Terms:</span>
                 <span className="font-bold">{selectedPo.deliveryTerms}</span>
               </div>
               <div>
-                <span className="text-slate-400 font-bold uppercase block">Grand Total:</span>
-                <span className="text-sm font-black text-blue-600">₹{selectedPo.grandTotal?.toLocaleString("en-IN")}</span>
+                <span className="text-[11px] text-slate-400 font-bold uppercase block">Status:</span>
+                <StatusBadge status={selectedPo.status} />
               </div>
             </div>
 
-            {/* Line items */}
             <div>
-              <h5 className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-2">PO Items:</h5>
-              <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden text-xs">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-100 dark:bg-slate-800 font-bold text-[10px] uppercase">
+              <h5 className="font-bold uppercase text-[11px] text-slate-700 dark:text-slate-300 mb-2">Contract Item Lines:</h5>
+              <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-slate-100 dark:bg-slate-800 font-bold">
                     <tr>
-                      <th className="p-2">Material</th>
-                      <th className="p-2">Qty</th>
-                      <th className="p-2">Rate</th>
-                      <th className="p-2">GST %</th>
-                      <th className="p-2 text-right">Total</th>
+                      <th className="p-2.5">Material</th>
+                      <th className="p-2.5">Quantity</th>
+                      <th className="p-2.5">Rate</th>
+                      <th className="p-2.5">GST</th>
+                      <th className="p-2.5 text-right">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {selectedPo.items?.map((it: any) => (
                       <tr key={it.id}>
-                        <td className="p-2 font-bold">{it.material?.name}</td>
-                        <td className="p-2">{it.quantity} {it.unit?.symbol || "pcs"}</td>
-                        <td className="p-2">₹{it.rate}</td>
-                        <td className="p-2">{it.gstPercent}%</td>
-                        <td className="p-2 text-right font-bold">₹{it.totalAmount?.toLocaleString("en-IN")}</td>
+                        <td className="p-2.5 font-medium">{it.material?.name}</td>
+                        <td className="p-2.5">{it.quantity} {it.unit?.symbol || "pcs"}</td>
+                        <td className="p-2.5">₹{Number(it.rate || 0).toLocaleString("en-IN")}</td>
+                        <td className="p-2.5">{it.gstPercent || 18}%</td>
+                        <td className="p-2.5 text-right font-bold">₹{Number(it.totalAmount || 0).toLocaleString("en-IN")}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -190,43 +251,55 @@ export default function POApprovalPage() {
               </div>
             </div>
 
-            {/* Approval History */}
-            {selectedPo.approvals?.length > 0 && (
-              <div>
-                <h5 className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-2">Previous Approval Logs:</h5>
-                <div className="space-y-2 text-xs">
-                  {selectedPo.approvals.map((app: any) => (
-                    <div key={app.id} className="p-2 rounded bg-slate-50 dark:bg-slate-800 flex justify-between">
-                      <div>
-                        <strong>Level {app.level}: {app.actionBy} ({app.actionRole})</strong>
-                        {app.comments && <p className="text-slate-500 italic">&quot;{app.comments}&quot;</p>}
-                      </div>
-                      <StatusBadge status={app.action} />
-                    </div>
-                  ))}
+            <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg border border-blue-100 dark:border-blue-900 font-bold">
+              <span>Grand Total Amount:</span>
+              <span className="text-blue-600 dark:text-blue-400 text-sm">₹{Number(selectedPo.grandTotal || 0).toLocaleString("en-IN")}</span>
+            </div>
+
+            {/* Approval Actions */}
+            {activeTab === "pending" ? (
+              <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <label className="font-bold block text-slate-700 dark:text-slate-300">
+                  Manager Approval Remarks:
+                </label>
+                <textarea
+                  className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                  rows={3}
+                  placeholder="e.g. Budget authorized. Proceed with dispatch to vendor."
+                  value={comments}
+                  onChange={(e) => setComments(e.target.value)}
+                />
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" size="sm" onClick={() => setSelectedPo(null)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handlePOAction("REJECT")}
+                    isLoading={isProcessing}
+                  >
+                    <XCircle className="w-4 h-4 mr-1" /> Reject PO
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handlePOAction("APPROVE")}
+                    isLoading={isProcessing}
+                    className="font-bold"
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-1" /> Approve PO & Advance to Dispatch
+                  </Button>
                 </div>
               </div>
+            ) : (
+              <div className="flex justify-end pt-2 border-t border-slate-200 dark:border-slate-800">
+                <Button variant="outline" size="sm" onClick={() => setSelectedPo(null)}>
+                  Close
+                </Button>
+              </div>
             )}
-
-            <div className="space-y-1 text-xs">
-              <label className="font-bold uppercase text-slate-700 dark:text-slate-300">Approval Comments</label>
-              <textarea
-                rows={2}
-                placeholder="Enter remarks for PO clearance..."
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                className="w-full p-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-              <Button variant="danger" size="sm" onClick={() => handlePOAction("REJECT")} isLoading={isProcessing}>
-                <XCircle className="w-3.5 h-3.5 mr-1" /> Reject PO
-              </Button>
-              <Button variant="primary" size="sm" onClick={() => handlePOAction("APPROVE")} isLoading={isProcessing} className="bg-emerald-600 hover:bg-emerald-700 font-bold">
-                <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Grant Approval Level {selectedPo.approvalLevel}
-              </Button>
-            </div>
           </div>
         </Modal>
       )}

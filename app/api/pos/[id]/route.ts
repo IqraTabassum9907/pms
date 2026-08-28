@@ -13,7 +13,10 @@ export async function PATCH(
     const body = await req.json();
 
     const poIndex = MOCK_PURCHASE_ORDERS.findIndex((po) => po.id === id || po.poNo === id);
-    const existing = poIndex !== -1 ? MOCK_PURCHASE_ORDERS[poIndex] : MOCK_PURCHASE_ORDERS[0];
+    if (poIndex === -1) {
+      return NextResponse.json({ error: `Purchase Order ${id} not found` }, { status: 404 });
+    }
+    const existing = MOCK_PURCHASE_ORDERS[poIndex];
     const { action, comments, userName, userRole, userEmail, dispatchMethod, recipientEmail, message } = body;
 
     let newStatus = existing.status;

@@ -34,43 +34,47 @@ export default function StockInventoryPage() {
       header: "SKU / Material",
       cell: ({ row }: any) => (
         <div>
-          <div className="font-bold text-slate-900 dark:text-slate-100">{row.original.material?.name}</div>
-          <div className="text-[10px] text-slate-500 font-mono">{row.original.sku} • {row.original.material?.category?.name}</div>
+          <div className="font-bold text-slate-900 dark:text-slate-100">{row.original.material?.name || "Material"}</div>
+          <div className="text-[10px] text-slate-500 font-mono">
+            {row.original.material?.code || row.original.sku || "MAT-001"} • {row.original.material?.category?.name || "General"}
+          </div>
         </div>
       ),
     },
     {
       accessorKey: "warehouse",
       header: "Warehouse",
-      cell: ({ row }: any) => row.original.warehouse?.name || "Central Warehouse",
+      cell: ({ row }: any) => row.original.warehouse?.name || "Central Warehouse Mumbai",
     },
     {
       accessorKey: "openingStock",
       header: "Opening",
-      cell: ({ row }: any) => `${row.original.openingStock} ${row.original.unit?.symbol || "pcs"}`,
+      cell: ({ row }: any) => `${row.original.openingStock ?? 0} ${row.original.unit?.symbol || "pcs"}`,
     },
     {
       accessorKey: "receivedStock",
       header: "Received",
-      cell: ({ row }: any) => <span className="text-emerald-600 font-bold">+{row.original.receivedStock}</span>,
+      cell: ({ row }: any) => <span className="text-emerald-600 font-bold">+{row.original.receivedStock ?? 0}</span>,
     },
     {
       accessorKey: "issuedStock",
       header: "Issued",
-      cell: ({ row }: any) => <span className="text-rose-600 font-bold">-{row.original.issuedStock}</span>,
+      cell: ({ row }: any) => <span className="text-rose-600 font-bold">-{row.original.issuedStock ?? 0}</span>,
     },
     {
       accessorKey: "availableStock",
       header: "Available Stock",
       cell: ({ row }: any) => {
-        const isReorder = row.original.availableStock <= row.original.reorderLevel;
+        const reorder = row.original.material?.reorderLevel || row.original.reorderLevel || 50;
+        const available = row.original.availableStock ?? 0;
+        const isReorder = available <= reorder;
         return (
           <div className="flex items-center space-x-2">
             <span className={`font-black text-sm ${isReorder ? "text-rose-600" : "text-slate-900 dark:text-slate-100"}`}>
-              {row.original.availableStock} {row.original.unit?.symbol || "pcs"}
+              {available} {row.original.unit?.symbol || "pcs"}
             </span>
             {isReorder && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 animate-pulse">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 animate-pulse">
                 <AlertTriangle className="w-3 h-3 mr-0.5" /> Reorder Alert
               </span>
             )}
@@ -81,7 +85,10 @@ export default function StockInventoryPage() {
     {
       accessorKey: "reorderLevel",
       header: "Reorder Level",
-      cell: ({ row }: any) => `${row.original.reorderLevel} ${row.original.unit?.symbol || "pcs"}`,
+      cell: ({ row }: any) => {
+        const reorder = row.original.material?.reorderLevel || row.original.reorderLevel || 50;
+        return <span>{reorder} {row.original.unit?.symbol || "pcs"}</span>;
+      },
     },
   ];
 

@@ -534,6 +534,29 @@ export const MOCK_QUOTATIONS = [
       { id: "qi4", materialId: "mat8", material: MOCK_MATERIALS[7], quantity: 150, rate: 820, discountPercent: 2, gstPercent: 18, amount: 120540, total: 142237 },
     ],
   },
+  {
+    id: "q4",
+    quotationNo: "QUO-2026-0004",
+    quotationDate: "2026-08-10T14:00:00Z",
+    vendorId: "v4",
+    vendor: MOCK_VENDORS[3],
+    indentId: "ind4",
+    indent: { indentNo: "IND-2026-0004", department: MOCK_DEPARTMENTS[0] },
+    validUntil: "2026-09-10T00:00:00Z",
+    paymentTerms: "Advance 50%",
+    deliveryTerms: "FOR Destination",
+    freight: 12000,
+    taxAmount: 58860,
+    discountAmount: 0,
+    totalAmount: 388500,
+    remarks: "Direct manufacturer supply with 2-year industrial warranty",
+    status: "RECEIVED",
+    createdAt: "2026-08-10T14:00:00Z",
+    items: [
+      { id: "qi5", materialId: "mat2", material: MOCK_MATERIALS[1], quantity: 300, rate: 630, discountPercent: 0, gstPercent: 18, amount: 189000, total: 223020 },
+      { id: "qi6", materialId: "mat8", material: MOCK_MATERIALS[7], quantity: 150, rate: 860, discountPercent: 0, gstPercent: 18, amount: 129000, total: 152220 },
+    ],
+  },
 ];
 
 export const MOCK_PAYMENTS = [

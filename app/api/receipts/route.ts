@@ -7,6 +7,7 @@ import {
   MOCK_STOCK,
   MOCK_STOCK_MOVEMENTS,
   MOCK_PURCHASE_ORDERS,
+  MOCK_PAYMENTS,
   MOCK_DASHBOARD,
   MOCK_AUDIT_LOGS,
   MOCK_NOTIFICATIONS,
@@ -105,13 +106,49 @@ export async function POST(req: Request) {
       });
     });
 
-    // Mark PO as COMPLETED
+    // Determine whether the full ordered quantity has arrived, or only part of it —
+    // drives whether the PO is fully closed or stays open for a follow-up delivery.
+    let newPoStatus: string | null = null;
     if (po) {
-      po.status = "COMPLETED";
-      MOCK_DASHBOARD.kpis.completedPurchases += 1;
-      if (MOCK_DASHBOARD.kpis.materialAwaitingReceipt > 0) {
-        MOCK_DASHBOARD.kpis.materialAwaitingReceipt -= 1;
+      const fullyReceived = receiptItems.every(
+        (ri: any) => ri.receivedQty >= (po.items.find((pi: any) => pi.materialId === ri.materialId)?.quantity ?? ri.orderedQty)
+      );
+      newPoStatus = fullyReceived ? "COMPLETED" : "PARTIALLY_COMPLETED";
+      po.status = newPoStatus;
+      if (fullyReceived) {
+        MOCK_DASHBOARD.kpis.completedPurchases += 1;
+        if (MOCK_DASHBOARD.kpis.materialAwaitingReceipt > 0) {
+          MOCK_DASHBOARD.kpis.materialAwaitingReceipt -= 1;
+        }
       }
+    }
+
+    // Auto-raise the vendor invoice/payment record against this GRN so every PO
+    // that completes the goods-receipt stage automatically advances into the
+    // Payment desk — regardless of whether it was pre-seeded or created live.
+    let createdPayment: any = null;
+    if (po && !MOCK_PAYMENTS.some((p) => p.poId === po.id)) {
+      const payCount = MOCK_PAYMENTS.length + 1;
+      createdPayment = {
+        id: `pay-${Date.now()}`,
+        paymentNo: `PAY-2026-${String(payCount).padStart(4, "0")}`,
+        poId: po.id,
+        po: { poNo: po.poNo },
+        vendorId: vendor.id,
+        vendor,
+        invoiceNo: body.invoiceNo || `INV-${Date.now().toString().slice(-6)}`,
+        invoiceDate: new Date().toISOString(),
+        invoiceAmount: po.grandTotal,
+        paidAmount: 0,
+        balanceAmount: po.grandTotal,
+        dueDate: new Date(Date.now() + 30 * 86400000).toISOString(),
+        status: "PENDING",
+        remarks: `Auto-raised on GRN ${grnNo} against ${po.poNo}`,
+        createdAt: new Date().toISOString(),
+        transactions: [],
+      };
+      MOCK_PAYMENTS.unshift(createdPayment);
+      MOCK_DASHBOARD.kpis.pendingPayments += po.grandTotal;
     }
 
     MOCK_AUDIT_LOGS.unshift({
@@ -132,13 +169,41 @@ export async function POST(req: Request) {
     MOCK_NOTIFICATIONS.unshift({
       id: `n-${Date.now()}`,
       title: `GRN ${newReceipt.grnNo} Created`,
-      message: `Goods received against ${po?.poNo || "PO"}. Inventory stock updated.`,
+      message: `Goods received against ${po?.poNo || "PO"} (${newPoStatus === "PARTIALLY_COMPLETED" ? "partial delivery" : "fully delivered"}). Inventory stock updated.`,
       type: "SUCCESS",
       recipientRole: "PURCHASE_MANAGER",
       isRead: false,
       linkUrl: "/purchase/stock",
       createdAt: new Date().toISOString(),
     });
+
+    if (createdPayment) {
+      MOCK_AUDIT_LOGS.unshift({
+        id: `al-${Date.now() + 1}`,
+        userEmail: "system@purchaseflow.com",
+        userName: "System",
+        userRole: "SYSTEM",
+        action: "Raised Vendor Invoice",
+        entity: "Payment",
+        entityId: createdPayment.paymentNo,
+        previousStatus: "NONE",
+        newStatus: "PENDING",
+        details: `Auto-raised invoice ${createdPayment.paymentNo} for ₹${createdPayment.invoiceAmount.toLocaleString("en-IN")} against ${po?.poNo}`,
+        ipAddress: "127.0.0.1",
+        createdAt: new Date().toISOString(),
+      });
+
+      MOCK_NOTIFICATIONS.unshift({
+        id: `n-${Date.now() + 1}`,
+        title: `Invoice ${createdPayment.paymentNo} Ready for Payment`,
+        message: `₹${createdPayment.invoiceAmount.toLocaleString("en-IN")} due to ${vendor.name} for ${po?.poNo}.`,
+        type: "INFO",
+        recipientRole: "ACCOUNTS",
+        isRead: false,
+        linkUrl: "/purchase/payment",
+        createdAt: new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json(newReceipt, { status: 201 });
   } catch (error) {

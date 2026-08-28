@@ -36,6 +36,14 @@ export async function POST(req: Request) {
     // Save in memory
     MOCK_LOGISTICS.unshift(newLogistics);
 
+    // Advance the PO out of the Logistics "pending" queue (dispatched, no transport
+    // arranged yet) into "in transit" so it stops showing up there again, while it
+    // remains visible to Material Receipt / Follow-up which accept SENT or IN_PROGRESS.
+    const previousPoStatus = po.status;
+    if (po.status === "SENT") {
+      po.status = "IN_PROGRESS";
+    }
+
     MOCK_AUDIT_LOGS.unshift({
       id: `al-${Date.now()}`,
       userEmail: body.userEmail || "store@purchaseflow.com",
@@ -44,7 +52,7 @@ export async function POST(req: Request) {
       action: "Created Logistics Arrangement",
       entity: "Logistics",
       entityId: po.poNo,
-      previousStatus: "LOGISTICS_PENDING",
+      previousStatus: previousPoStatus,
       newStatus: newLogistics.status,
       details: `Transporter: ${newLogistics.transporter}, Vehicle: ${newLogistics.vehicleNo}`,
       ipAddress: "127.0.0.1",

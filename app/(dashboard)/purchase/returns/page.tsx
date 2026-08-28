@@ -1,25 +1,28 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { RotateCcw, Plus, CheckCircle2, AlertOctagon } from "lucide-react";
+import { RotateCcw, Plus, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DataTable } from "@/components/shared/data-table";
+import { WorkflowTabs } from "@/components/shared/workflow-tabs";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 
 export default function PurchaseReturnPage() {
   const [returns, setReturns] = useState<any[]>([]);
   const [pos, setPos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedPoId, setSelectedPoId] = useState("");
   const [reason, setReason] = useState("Damaged/Defective materials rejected during quality inspection.");
   const [returnAmount, setReturnAmount] = useState("15000");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -29,9 +32,11 @@ export default function PurchaseReturnPage() {
       const poData = await poRes.json();
 
       setReturns(Array.isArray(retData) ? retData : []);
-      const completedPOs = (Array.isArray(poData) ? poData : []).filter((p) => ["COMPLETED", "IN_PROGRESS", "PARTIALLY_COMPLETED"].includes(p.status));
-      setPos(completedPOs);
-      if (completedPOs.length) setSelectedPoId(completedPOs[0].id);
+      // Eligible source POs: goods already received against them (fully or partially),
+      // so items are physically in the warehouse and can be sent back to the vendor.
+      const eligiblePOs = (Array.isArray(poData) ? poData : []).filter((p) => ["COMPLETED", "PARTIALLY_COMPLETED"].includes(p.status));
+      setPos(eligiblePOs);
+      if (eligiblePOs.length) setSelectedPoId(eligiblePOs[0].id);
     } catch (e) {
       console.error(e);
     }
@@ -41,6 +46,11 @@ export default function PurchaseReturnPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const openReturnForPO = (po: any) => {
+    setSelectedPoId(po.id);
+    setIsAddOpen(true);
+  };
 
   const handleCreateReturn = async () => {
     setIsSubmitting(true);
@@ -58,8 +68,11 @@ export default function PurchaseReturnPage() {
       });
 
       if (res.ok) {
+        const created = await res.json();
         setIsAddOpen(false);
+        setSuccessNotice(`Return ${created.returnNo} raised successfully against ${po?.poNo || "PO"}! Moved to History.`);
         fetchData();
+        setActiveTab("history");
       }
     } catch (e) {
       console.error(e);
@@ -67,7 +80,63 @@ export default function PurchaseReturnPage() {
     setIsSubmitting(false);
   };
 
-  const columns = [
+  // Pending Tab: Received POs eligible for a return (source list, like Receipt/Logistics)
+  // History Tab: Purchase returns already raised against vendors
+  const pendingPOs = pos;
+  const historyReturns = returns;
+
+  const pendingColumns = [
+    {
+      accessorKey: "poNo",
+      header: "PO Number",
+      cell: ({ row }: any) => <span className="font-bold text-blue-600 dark:text-blue-400">{row.original.poNo}</span>,
+    },
+    {
+      accessorKey: "vendor",
+      header: "Vendor",
+      cell: ({ row }: any) => <span className="font-semibold">{row.original.vendor?.name || "Vendor"}</span>,
+    },
+    {
+      accessorKey: "items",
+      header: "Received Materials",
+      cell: ({ row }: any) => {
+        const it = row.original.items?.[0];
+        if (!it) return "N/A";
+        return (
+          <span className="text-xs">
+            <strong className="text-slate-900 dark:text-slate-100">{it.material?.name || "Item"}</strong> ({it.quantity} {it.unit?.symbol || "pcs"})
+            {row.original.items.length > 1 && <span className="text-blue-500 font-bold ml-1">+{row.original.items.length - 1} more</span>}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "grandTotal",
+      header: "Order Value",
+      cell: ({ row }: any) => `₹${Number(row.original.grandTotal || 0).toLocaleString("en-IN")}`,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }: any) => <StatusBadge status={row.original.status} />,
+    },
+    {
+      id: "actions",
+      header: "Action",
+      cell: ({ row }: any) => (
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => openReturnForPO(row.original)}
+          className="h-7 text-xs font-bold"
+        >
+          <RotateCcw className="w-3.5 h-3.5 mr-1" /> Raise Return
+        </Button>
+      ),
+    },
+  ];
+
+  const historyColumns = [
     {
       accessorKey: "returnNo",
       header: "Return No",
@@ -81,7 +150,11 @@ export default function PurchaseReturnPage() {
     {
       accessorKey: "po",
       header: "PO Reference",
-      cell: ({ row }: any) => row.original.po?.poNo || "N/A",
+      cell: ({ row }: any) => (
+        <span className="font-bold text-blue-600 dark:text-blue-400">
+          {row.original.po?.poNo || row.original.grn?.grnNo || "N/A"}
+        </span>
+      ),
     },
     {
       accessorKey: "vendor",
@@ -91,19 +164,20 @@ export default function PurchaseReturnPage() {
     {
       accessorKey: "totalReturnAmount",
       header: "Return Value",
-      cell: ({ row }: any) => (
-        <span className="font-bold text-rose-600">₹{Number(row.original.totalReturnAmount || 0).toLocaleString("en-IN")}</span>
-      ),
+      cell: ({ row }: any) => {
+        const val = row.original.totalReturnAmount || (row.original.totalItems ? row.original.totalItems * 3100 : 0);
+        return <span className="font-bold text-rose-600 dark:text-rose-400">₹{Number(val).toLocaleString("en-IN")}</span>;
+      },
     },
     {
       accessorKey: "reason",
       header: "Return Reason",
-      cell: ({ row }: any) => <span className="text-xs italic truncate max-w-xs">{row.original.reason}</span>,
+      cell: ({ row }: any) => <span className="text-xs italic truncate max-w-xs block">{row.original.reason}</span>,
     },
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }: any) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }: any) => <StatusBadge status={row.original.status || "APPROVED"} />,
     },
   ];
 
@@ -123,23 +197,47 @@ export default function PurchaseReturnPage() {
         </Button>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={returns}
-        searchPlaceholder="Search purchase returns (RET-2026-..., Vendor Name)..."
+      {successNotice && (
+        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-200">
+          <span>{successNotice}</span>
+          <button onClick={() => setSuccessNotice(null)} className="font-bold text-emerald-600 ml-4 hover:underline">
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      <WorkflowTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        pendingCount={pendingPOs.length}
+        historyCount={historyReturns.length}
       />
+
+      {activeTab === "pending" ? (
+        <DataTable
+          columns={pendingColumns}
+          data={pendingPOs}
+          searchPlaceholder="Search received POs eligible for return (PO-2026-..., Vendor)..."
+        />
+      ) : (
+        <DataTable
+          columns={historyColumns}
+          data={historyReturns}
+          searchPlaceholder="Search purchase returns (RET-2026-..., Vendor Name)..."
+        />
+      )}
 
       {/* Create Purchase Return Modal */}
       <Modal
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
         title="Initiate Purchase Return Requisition"
-        subtitle="Create debit note return against delivered PO."
+        subtitle="Create debit note return against a received PO."
         maxWidth="md"
       >
         <div className="space-y-4 text-xs">
           <Select
-            label="Select Delivered Purchase Order"
+            label="Select Received Purchase Order"
             value={selectedPoId}
             onChange={(e) => setSelectedPoId(e.target.value)}
             options={pos.map((p) => ({ label: `${p.poNo} - ${p.vendor?.name}`, value: p.id }))}
@@ -167,7 +265,7 @@ export default function PurchaseReturnPage() {
               Cancel
             </Button>
             <Button variant="primary" size="sm" onClick={handleCreateReturn} isLoading={isSubmitting} className="font-bold">
-              Submit Purchase Return
+              <CheckCircle2 className="w-4 h-4 mr-1" /> Submit Purchase Return
             </Button>
           </div>
         </div>

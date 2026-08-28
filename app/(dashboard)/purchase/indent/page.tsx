@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Plus, Eye, CheckCircle2, XCircle, FileText, Calendar, AlertCircle } from "lucide-react";
+import { Plus, Eye, CheckCircle2, XCircle, FileText, Calendar, AlertCircle, ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { WorkflowTabs } from "@/components/shared/workflow-tabs";
 import { DataTable } from "@/components/shared/data-table";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { getTATStatus } from "@/lib/tat/tat-engine";
+import Link from "next/link";
 
 export default function PurchaseIndentPage() {
   const [indents, setIndents] = useState<any[]>([]);
@@ -23,6 +24,7 @@ export default function PurchaseIndentPage() {
   // Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [viewIndent, setViewIndent] = useState<any>(null);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   // Form State
   const [departmentId, setDepartmentId] = useState("");
@@ -124,8 +126,15 @@ export default function PurchaseIndentPage() {
         }),
       });
       if (res.ok) {
+        const created = await res.json();
         setIsCreateOpen(false);
+        setSuccessNotice(
+          status === "SUBMITTED"
+            ? `Purchase Indent ${created.indentNo} submitted successfully! Advanced to Indent Approval Desk.`
+            : `Draft Indent ${created.indentNo} saved.`
+        );
         fetchData();
+        setActiveTab("pending");
       }
     } catch (e) {
       console.error(e);
@@ -180,7 +189,9 @@ export default function PurchaseIndentPage() {
       accessorKey: "totalEstimatedAmount",
       header: "Est. Amount",
       cell: ({ row }: any) => (
-        <span className="font-bold">₹{Number(row.original.totalEstimatedAmount || 0).toLocaleString("en-IN")}</span>
+        <span className="font-bold text-slate-900 dark:text-slate-100">
+          ₹{Number(row.original.totalEstimatedAmount || 0).toLocaleString("en-IN")}
+        </span>
       ),
     },
     {
@@ -202,16 +213,25 @@ export default function PurchaseIndentPage() {
     },
     {
       id: "actions",
-      header: "Actions",
+      header: "Action",
       cell: ({ row }: any) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setViewIndent(row.original)}
-          className="h-7 text-xs"
-        >
-          <Eye className="w-3.5 h-3.5 mr-1" /> View
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setViewIndent(row.original)}
+            className="h-7 text-xs"
+          >
+            <Eye className="w-3.5 h-3.5 mr-1" /> View
+          </Button>
+          {activeTab === "pending" && (
+            <Link href="/purchase/approval">
+              <Button variant="primary" size="sm" className="h-7 text-xs font-bold">
+                <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Approve
+              </Button>
+            </Link>
+          )}
+        </div>
       ),
     },
   ];
@@ -228,10 +248,27 @@ export default function PurchaseIndentPage() {
             Raise material requisitions, track estimated budgets, and monitor department approval timelines.
           </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)} className="font-bold">
-          <Plus className="w-4 h-4 mr-2" /> Create Purchase Indent
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setIsCreateOpen(true)} className="font-bold">
+            <Plus className="w-4 h-4 mr-2" /> Create Purchase Indent
+          </Button>
+          <Link href="/purchase/approval">
+            <Button variant="secondary" className="font-bold">
+              Indent Approval Desk <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      {/* Success Banner */}
+      {successNotice && (
+        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-200">
+          <span>{successNotice}</span>
+          <button onClick={() => setSuccessNotice(null)} className="font-bold text-emerald-600 ml-4 hover:underline">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Workflow Tabs (Pending / History) */}
       <WorkflowTabs
@@ -248,6 +285,7 @@ export default function PurchaseIndentPage() {
         searchPlaceholder="Search Indents (IND-2026-..., Department, Requested By)..."
         filterOptions={[
           { label: "Submitted", value: "SUBMITTED", key: "status" },
+          { label: "Under Review", value: "UNDER_REVIEW", key: "status" },
           { label: "Approved", value: "APPROVED", key: "status" },
           { label: "Rejected", value: "REJECTED", key: "status" },
         ]}
@@ -357,7 +395,7 @@ export default function PurchaseIndentPage() {
               Save Draft
             </Button>
             <Button variant="primary" size="sm" onClick={() => handleCreateIndent("SUBMITTED")} isLoading={isSubmitting}>
-              Submit for Approval
+              <CheckCircle2 className="w-4 h-4 mr-1" /> Submit for Approval
             </Button>
           </div>
         </div>
@@ -425,6 +463,17 @@ export default function PurchaseIndentPage() {
             <div className="flex justify-between items-center pt-2 font-bold text-sm">
               <span>Total Estimated Amount:</span>
               <span className="text-blue-600">₹{viewIndent.totalEstimatedAmount?.toLocaleString("en-IN")}</span>
+            </div>
+
+            <div className="flex justify-between items-center pt-3 border-t border-slate-200 dark:border-slate-800">
+              <Link href="/purchase/approval">
+                <Button variant="secondary" size="sm" className="font-bold">
+                  <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Open Approval Desk
+                </Button>
+              </Link>
+              <Button variant="outline" size="sm" onClick={() => setViewIndent(null)}>
+                Close
+              </Button>
             </div>
           </div>
         </Modal>
