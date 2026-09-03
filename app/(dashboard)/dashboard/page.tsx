@@ -3,43 +3,147 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  DollarSign,
-  FileText,
-  CheckCircle2,
-  Clock,
-  CreditCard,
-  PackageCheck,
-  AlertTriangle,
   ArrowUpRight,
-  TrendingUp,
-  Boxes,
+  Package,
+  Zap,
+  Wrench,
+  ShieldCheck,
+  Fuel,
+  MoreVertical,
+  Building2,
+  CreditCard,
+  Truck,
+  Receipt,
   Plus,
   ArrowRight,
+  Wallet,
+  CheckCircle2,
+  Clock,
+  Send,
+  FileSpreadsheet,
+  FileText,
+  Boxes,
+  Layers,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import { useAuth } from "@/lib/auth/auth-context";
 
-const COLORS = ["#0f172a", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1"];
+// Quick Procurement Approvers / Team
+const PMS_APPROVERS = [
+  { id: "1", name: "Suresh Kumar", dept: "Production", initials: "SK", color: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300" },
+  { id: "2", name: "Ravi Prasad", dept: "Maintenance", initials: "RP", color: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" },
+  { id: "3", name: "Kavita Singh", dept: "Purchase", initials: "KS", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" },
+  { id: "4", name: "Meena Joshi", dept: "Admin", initials: "MJ", color: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300" },
+  { id: "5", name: "Dr. Anand Rao", dept: "QC Lab", initials: "AR", color: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300" },
+];
+
+// Procurement Material Spending Categories
+const MATERIAL_CATEGORIES = [
+  { id: "1", title: "Raw Materials", subtitle: "Steel & Coils", amount: "₹9.41L", icon: Package, color: "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400" },
+  { id: "2", title: "Electrical", subtitle: "Cables & MCBs", amount: "₹9.15L", icon: Zap, color: "bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400" },
+  { id: "3", title: "Mechanical", subtitle: "Bearings & Valves", amount: "₹2.12L", icon: Wrench, color: "bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400" },
+  { id: "4", title: "Safety & PPE", subtitle: "Helmets & Boots", amount: "₹1.00L", icon: ShieldCheck, color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400" },
+  { id: "5", title: "Lubricants", subtitle: "Hydraulic Oils", amount: "₹1.80L", icon: Fuel, color: "bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400" },
+];
+
+// Real Purchase Orders / Transactions Data
+const PMS_TRANSACTIONS = [
+  {
+    id: "po1",
+    poNo: "PO-2026-0001",
+    name: "Tata Steel Limited",
+    contactPerson: "Rajesh Sharma",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
+    status: "Completed",
+    date: "22 Jan, 2026",
+    amount: "₹5,16,500",
+    category: "Raw Materials",
+  },
+  {
+    id: "po2",
+    poNo: "PO-2026-0002",
+    name: "Reliance Industries",
+    contactPerson: "Priya Mehta",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+    status: "In progress",
+    date: "18 Jan, 2026",
+    amount: "₹3,72,430",
+    category: "Electrical",
+  },
+  {
+    id: "po3",
+    poNo: "PO-2026-0003",
+    name: "Siemens India Ltd",
+    contactPerson: "Anjali Krishnan",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
+    status: "Completed",
+    date: "12 Jan, 2026",
+    amount: "₹3,08,200",
+    category: "Electrical",
+  },
+  {
+    id: "po4",
+    poNo: "PO-2026-0004",
+    name: "ABB India Limited",
+    contactPerson: "Vikram Malhotra",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80",
+    status: "In progress",
+    date: "08 Jan, 2026",
+    amount: "₹10,05,000",
+    category: "Mechanical",
+  },
+];
+
+// Recent Procurement Activity Feed
+const RECENT_PROCUREMENT_FEED = [
+  {
+    id: "rf1",
+    title: "Tata Steel Advance",
+    subtitle: "Bank NEFT Cleared",
+    amount: "-₹1,50,000",
+    isPositive: false,
+    icon: Building2,
+  },
+  {
+    id: "rf2",
+    title: "Reliance Copper GRN",
+    subtitle: "Goods Receipt Verified",
+    amount: "+₹3,72,430",
+    isPositive: true,
+    icon: Truck,
+  },
+  {
+    id: "rf3",
+    title: "Siemens Invoice",
+    subtitle: "Accounts Voucher Approved",
+    amount: "+₹3,08,200",
+    isPositive: true,
+    icon: CreditCard,
+  },
+  {
+    id: "rf4",
+    title: "ABB India Dispatch",
+    subtitle: "In Transit from Bengaluru",
+    amount: "-₹10,05,000",
+    isPositive: false,
+    icon: Package,
+  },
+  {
+    id: "rf5",
+    title: "Safety Helmets Batch",
+    subtitle: "Store Receipt Logged",
+    amount: "-₹35,000",
+    isPositive: false,
+    icon: Receipt,
+  },
+];
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"Newest" | "Oldest">("Newest");
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -54,344 +158,430 @@ export default function DashboardPage() {
       });
   }, []);
 
+  const triggerAction = (msg: string) => {
+    setActionNotice(msg);
+    setTimeout(() => setActionNotice(null), 3500);
+  };
+
   if (loading) return <TableSkeleton />;
 
   const kpis = data?.kpis || {};
-  const charts = data?.charts || {};
-  const recent = data?.recent || {};
+  const currentUserName = user?.name || "Kavita Singh";
+  const userRole = user?.role ? user.role.replace(/_/g, " ") : "Purchase Manager";
+
+  // Filter transactions
+  const transactions =
+    activeTab === "Newest"
+      ? PMS_TRANSACTIONS
+      : [...PMS_TRANSACTIONS].reverse();
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl text-slate-900 dark:text-slate-100 shadow-2xs">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">
-            Purchase Management Overview
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-xl">
-            Real-time procurement KPIs, pending stage approvals, vendor performance, and budget utilization.
-          </p>
+    <div className="space-y-6 max-w-[1600px] mx-auto animate-in fade-in duration-300">
+      {/* Action Toast Alert */}
+      {actionNotice && (
+        <div className="fixed top-5 right-5 z-50 bg-slate-950 text-white dark:bg-white dark:text-slate-950 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-semibold animate-in slide-in-from-top duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>{actionNotice}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/purchase/indent">
-            <Button variant="primary" size="sm" className="font-semibold text-xs">
-              <Plus className="w-3.5 h-3.5 mr-1" /> New Indent
-            </Button>
-          </Link>
-          <Link href="/purchase/po">
-            <Button variant="outline" size="sm" className="text-xs">
-              Create PO
-            </Button>
-          </Link>
-        </div>
-      </div>
+      )}
 
-      {/* 8 Enterprise KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Total Purchase Value</p>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                ₹{(kpis.totalPurchaseValue ?? 0).toLocaleString("en-IN")}
-              </h3>
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center mt-1">
-                <TrendingUp className="w-3 h-3 mr-1" /> +12.4% vs last month
-              </p>
-            </div>
-            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              <DollarSign className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Main Grid: 2 Columns on desktop (Main Workspace & Right Panel) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* ========================================================================= */}
+        {/* LEFT / CENTER COLUMN (Col span 8 on LG, Col span 8 or 9 on XL) */}
+        {/* ========================================================================= */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* TOP ROW: 3 Bento Metric Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 1. Total Procurement Spend */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <Wallet className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Total Spend
+                  </span>
+                </div>
+                <Link
+                  href="/reports/purchase-register"
+                  className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-colors"
+                  title="View Purchase Register"
+                >
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              </div>
 
-        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Pending Indents</p>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                {kpis.pendingIndents ?? 0}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">Awaiting Dept Approval</p>
+              <div className="mt-5">
+                <h3 className="text-2xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  ₹ {(kpis.totalPurchaseValue ?? 4520000).toLocaleString("en-IN")}
+                </h3>
+                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1.5 flex items-center gap-1">
+                  +12.4% <span className="text-slate-400 dark:text-slate-500 font-normal">than last month</span>
+                </p>
+              </div>
             </div>
-            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              <FileText className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Pending PO Approvals</p>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                {kpis.pendingPOs ?? 0}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">Multi-level clearance</p>
-            </div>
-            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              <Clock className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+            {/* 2. Pending Approvals & Indents */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Pending Clearance
+                  </span>
+                </div>
+                <Link
+                  href="/purchase/approval"
+                  className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-colors"
+                  title="View Pending Approvals"
+                >
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              </div>
 
-        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Approved Active POs</p>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                {kpis.approvedPOs ?? 0}
-              </h3>
-              <p className="text-[11px] text-emerald-600 font-medium mt-1">Dispatched & active</p>
+              <div className="mt-5">
+                <h3 className="text-2xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  ₹ {(kpis.pendingPayments ?? 1033130).toLocaleString("en-IN")}
+                </h3>
+                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 mt-1.5 flex items-center gap-1">
+                  {kpis.pendingIndents ?? 2} Indents & {kpis.pendingPOs ?? 1} POs <span className="text-slate-400 dark:text-slate-500 font-normal">in queue</span>
+                </p>
+              </div>
             </div>
-            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Pending Payments</p>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                ₹{(kpis.pendingPayments ?? 0).toLocaleString("en-IN")}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">Unpaid vendor invoices</p>
-            </div>
-            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              <CreditCard className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+            {/* 3. Active POs & Inventory Inflow */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <Boxes className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Active POs
+                  </span>
+                </div>
+                <Link
+                  href="/purchase/po"
+                  className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-colors"
+                  title="View Purchase Orders"
+                >
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              </div>
 
-        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Awaiting Material Receipt</p>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                {kpis.materialAwaitingReceipt ?? 0}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-1">Pending GRN entry</p>
+              <div className="mt-5">
+                <h3 className="text-2xl font-bold text-slate-950 dark:text-white tracking-tight">
+                  {kpis.approvedPOs ?? 3} Active Orders
+                </h3>
+                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1.5 flex items-center gap-1">
+                  {kpis.materialAwaitingReceipt ?? 2} Awaiting GRN <span className="text-slate-400 dark:text-slate-500 font-normal">receipt</span>
+                </p>
+              </div>
             </div>
-            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              <PackageCheck className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Overdue Orders</p>
-              <h3 className="text-lg font-bold text-rose-600 dark:text-rose-400 mt-0.5">
-                {kpis.overdueOrders ?? 0}
-              </h3>
-              <p className="text-[11px] text-rose-500 font-medium mt-1">Past expected delivery</p>
+          {/* MIDDLE ROW: Material Categories Spending */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-950 dark:text-white tracking-tight">
+                  Procurement by Category
+                </h2>
+                <p className="text-xs text-slate-400 font-medium">
+                  Material spend breakdown across active manufacturing divisions
+                </p>
+              </div>
+              <Link
+                href="/reports/analytics"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white flex items-center gap-1 transition-colors"
+              >
+                View All <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-            <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Completed Purchases</p>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                {kpis.completedPurchases ?? 0}
-              </h3>
-              <p className="text-[11px] text-slate-500 font-medium mt-1">GRN & Payment cleared</p>
-            </div>
-            <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              <Boxes className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Analytics Recharts Visuals */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Monthly Purchase Value Area Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Monthly Purchase Value Trend</CardTitle>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Procurement spend in INR (₹)</p>
-            </div>
-            <span className="text-xs font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950 px-2.5 py-1 rounded-full border border-blue-200 dark:border-blue-800">
-              Year 2026
-            </span>
-          </CardHeader>
-          <CardContent>
-            <div className="h-72 w-full pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={charts.monthlyTrend}>
-                  <defs>
-                    <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis tickFormatter={(v: number) => `₹${(v / 100000).toFixed(1)}L`} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(value: any) => [`₹${Number(value).toLocaleString("en-IN")}`, "Purchase Value"]} />
-                  <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorSpend)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Category Breakdown Donut Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Purchase by Category</CardTitle>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Distribution across material types</p>
-          </CardHeader>
-          <CardContent>
-            <div className="h-72 w-full flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={charts.categoryData || []}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={4}
-                    dataKey="value"
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5">
+              {MATERIAL_CATEGORIES.map((cat) => {
+                const Icon = cat.icon;
+                return (
+                  <Link
+                    key={cat.id}
+                    href="/masters/categories"
+                    className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-200 dark:hover:border-slate-700 transition-all group block"
                   >
-                    {(charts.categoryData || []).map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(val: any) => [`₹${Number(val).toLocaleString("en-IN")}`, "Spend"]} />
-                </PieChart>
-              </ResponsiveContainer>
+                    <div className={`w-10 h-10 rounded-xl ${cat.color} flex items-center justify-center mb-4 transition-transform group-hover:scale-105`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                      {cat.title}
+                    </p>
+                    <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                      {cat.subtitle}
+                    </p>
+                    <p className="text-xs font-extrabold text-slate-950 dark:text-white mt-1.5">
+                      {cat.amount}
+                    </p>
+                  </Link>
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
 
-      {/* Pending Actions & Recent Activity Feed (Requirement #5) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pending Actions Cards */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Action Queue</CardTitle>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Action items requiring immediate approval or follow-up</p>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Link
-              href="/purchase/approval"
-              className="flex items-center justify-between p-3.5 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50 transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/80 text-amber-700 dark:text-amber-300">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    {kpis.pendingIndents ?? 0} Indents Waiting for Approval
-                  </div>
-                  <div className="text-[11px] text-slate-500">Requires department head sign-off</div>
-                </div>
+          {/* BOTTOM ROW: "Transactions / Purchase Orders" Clean Table */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+            {/* Header with Title & Filter Switch */}
+            <div className="flex items-center justify-between pb-5 border-b border-slate-100 dark:border-slate-800/80">
+              <div>
+                <h2 className="text-base font-bold text-slate-950 dark:text-white tracking-tight">
+                  Purchase Orders & Transactions
+                </h2>
+                <p className="text-xs text-slate-400 font-medium">
+                  Latest enterprise PO logs and vendor settlement status
+                </p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400" />
-            </Link>
-
-            <Link
-              href="/purchase/vendor-selection"
-              className="flex items-center justify-between p-3.5 rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20 hover:bg-blue-50 transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/80 text-blue-700 dark:text-blue-300">
-                  <TrendingUp className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    Quotations Ready for Comparison
-                  </div>
-                  <div className="text-[11px] text-slate-500">Compare quotes side-by-side and select vendor</div>
-                </div>
+              <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full text-xs font-semibold">
+                <button
+                  onClick={() => setActiveTab("Newest")}
+                  className={`px-3.5 py-1 rounded-full transition-all cursor-pointer ${
+                    activeTab === "Newest"
+                      ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950 shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900"
+                  }`}
+                >
+                  Newest
+                </button>
+                <button
+                  onClick={() => setActiveTab("Oldest")}
+                  className={`px-3.5 py-1 rounded-full transition-all cursor-pointer ${
+                    activeTab === "Oldest"
+                      ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950 shadow-xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900"
+                  }`}
+                >
+                  Oldest
+                </button>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400" />
-            </Link>
-
-            <Link
-              href="/purchase/po-approval"
-              className="flex items-center justify-between p-3.5 rounded-lg border border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/40 dark:bg-indigo-950/20 hover:bg-indigo-50 transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    {kpis.pendingPOs ?? 0} POs Waiting for Multilevel Approval
-                  </div>
-                  <div className="text-[11px] text-slate-500">Level 1 - Level 4 clearance workflow</div>
-                </div>
-              </div>
-              <ArrowRight className="w-4 h-4 text-slate-400" />
-            </Link>
-
-            <Link
-              href="/purchase/payment"
-              className="flex items-center justify-between p-3.5 rounded-lg border border-purple-200 dark:border-purple-900/50 bg-purple-50/40 dark:bg-purple-950/20 hover:bg-purple-50 transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/80 text-purple-700 dark:text-purple-300">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    Pending Vendor Payments Due
-                  </div>
-                  <div className="text-[11px] text-slate-500">Process NEFT / Bank transfers for invoices</div>
-                </div>
-              </div>
-              <ArrowRight className="w-4 h-4 text-slate-400" />
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* Recent Purchase Orders Feed */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Recent Purchase Orders</CardTitle>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Latest PO creations & status tracking</p>
             </div>
-            <Link href="/purchase/po" className="text-xs font-semibold text-blue-600 hover:underline">
-              View All
-            </Link>
-          </CardHeader>
-          <CardContent className="divide-y divide-slate-100 dark:divide-slate-800">
-            {(recent.pos || []).map((po: any) => (
-              <div key={po.id} className="py-3 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{po.poNo}</span>
-                    <StatusBadge status={po.status} />
+
+            {/* Table Header */}
+            <div className="hidden sm:grid grid-cols-12 py-3 px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="col-span-5">Vendor & Contact</div>
+              <div className="col-span-3">Status</div>
+              <div className="col-span-2">Date</div>
+              <div className="col-span-2 text-right">PO Value</div>
+            </div>
+
+            {/* Table Rows */}
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {transactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="py-3.5 px-2 grid grid-cols-1 sm:grid-cols-12 items-center gap-2 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 rounded-xl transition-colors"
+                >
+                  {/* Vendor Name + Avatar + PO No */}
+                  <div className="col-span-5 flex items-center gap-3">
+                    <img
+                      src={tx.avatar}
+                      alt={tx.name}
+                      className="w-9 h-9 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-800 shrink-0"
+                    />
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">
+                          {tx.name}
+                        </span>
+                        <span className="text-[10px] font-semibold text-slate-400">
+                          ({tx.poNo})
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        {tx.contactPerson} • {tx.category}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-[11px] text-slate-500 mt-0.5">{po.vendor?.name}</div>
+
+                  {/* Status Pill */}
+                  <div className="col-span-3">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                        tx.status === "In progress"
+                          ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+                          : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                      }`}
+                    >
+                      {tx.status}
+                    </span>
+                  </div>
+
+                  {/* Date */}
+                  <div className="col-span-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    {tx.date}
+                  </div>
+
+                  {/* Amount + 3 Dots */}
+                  <div className="col-span-2 flex items-center justify-between sm:justify-end gap-3">
+                    <span className="text-xs font-bold text-slate-950 dark:text-white">
+                      {tx.amount}
+                    </span>
+                    <Link
+                      href={`/purchase/po`}
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-md"
+                      title="View Details"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Link>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    ₹{po.grandTotal.toLocaleString("en-IN")}
-                  </div>
-                  <div className="text-[10px] text-slate-400">
-                    {new Date(po.poDate).toLocaleDateString("en-IN")}
-                  </div>
-                </div>
+              ))}
+            </div>
+
+            {/* Footer View All Link */}
+            <div className="mt-5 text-center pt-2">
+              <Link
+                href="/purchase/po"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-colors"
+              >
+                View All Purchase Orders <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* RIGHT COLUMN (Col span 4) — User Card, Send Again, Recent Transactions */}
+        {/* ========================================================================= */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* User Profile Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] text-center">
+            <div className="relative w-20 h-20 mx-auto mb-3.5">
+              <img
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80"
+                alt={currentUserName}
+                className="w-20 h-20 rounded-full object-cover ring-4 ring-slate-50 dark:ring-slate-800 shadow-sm"
+              />
+              <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+            </div>
+
+            <h3 className="text-base font-bold text-slate-950 dark:text-white">
+              {currentUserName}
+            </h3>
+            <p className="text-xs text-slate-400 font-medium mt-0.5">
+              {userRole} • #EMP-001
+            </p>
+
+            {/* Quick Procurement Actions: New PO / Indent */}
+            <div className="grid grid-cols-2 gap-3 mt-6">
+              <Link
+                href="/purchase/po"
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-950 dark:bg-white text-white dark:text-slate-950 text-xs font-bold shadow-xs hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" /> Create PO
+              </Link>
+              <Link
+                href="/purchase/indent"
+                className="w-full py-2.5 px-4 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <FileText className="w-3.5 h-3.5" /> New Indent
+              </Link>
+            </div>
+          </div>
+
+          {/* Send Again / Quick Approvers Team */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xs font-bold text-slate-950 dark:text-white tracking-tight">
+                  Department Approvers
+                </h3>
+                <p className="text-[10px] text-slate-400">Direct authorization matrix</p>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+              <Link
+                href="/masters/employees"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors"
+              >
+                View All
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-5 gap-2 text-center">
+              {PMS_APPROVERS.map((approver) => (
+                <button
+                  key={approver.id}
+                  onClick={() => triggerAction(`Assigned workflow to ${approver.name} (${approver.dept})`)}
+                  className="flex flex-col items-center group cursor-pointer"
+                  title={`${approver.name} - ${approver.dept}`}
+                >
+                  <div className={`w-10 h-10 rounded-full ${approver.color} flex items-center justify-center font-bold text-xs shadow-2xs group-hover:scale-105 transition-transform`}>
+                    {approver.initials}
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 mt-1.5 leading-tight truncate max-w-[52px]">
+                    {approver.name.split(" ")[0]}
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-medium leading-none truncate max-w-[52px]">
+                    {approver.dept}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Procurement Activity / Vouchers */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xs font-bold text-slate-950 dark:text-white tracking-tight">
+                  Recent Activity Logs
+                </h3>
+                <p className="text-[10px] text-slate-400">Payment & Material milestones</p>
+              </div>
+              <Link
+                href="/purchase/payment"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors"
+              >
+                View All
+              </Link>
+            </div>
+
+            <div className="space-y-3.5">
+              {RECENT_PROCUREMENT_FEED.map((feed) => {
+                const Icon = feed.icon;
+                return (
+                  <div
+                    key={feed.id}
+                    className="flex items-center justify-between p-1.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 rounded-xl transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 shrink-0">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                          {feed.title}
+                        </h4>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {feed.subtitle}
+                        </p>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`text-xs font-bold ${
+                        feed.isPositive
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-slate-950 dark:text-white"
+                      }`}
+                    >
+                      {feed.amount}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -7,10 +7,10 @@ import { clsx } from "clsx";
 import { useAuth } from "@/lib/auth/auth-context";
 import {
   LayoutDashboard,
-  ShoppingBag,
-  Database,
-  BarChart3,
-  ShieldAlert,
+  MessageSquare,
+  BarChart2,
+  ArrowLeftRight,
+  CreditCard,
   ChevronDown,
   ChevronRight,
   FileText,
@@ -20,7 +20,6 @@ import {
   FileSpreadsheet,
   Truck,
   PhoneCall,
-  CreditCard,
   PackageCheck,
   Boxes,
   RotateCcw,
@@ -39,12 +38,18 @@ import {
   Lock,
   Menu,
   X,
+  Sparkles,
+  Activity,
+  ArrowUpRight,
+  Crown,
+  LogOut,
 } from "lucide-react";
 
 interface NavItem {
   title: string;
   href: string;
   icon?: any;
+  badge?: string | number;
   permission?: string;
 }
 
@@ -54,29 +59,25 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const NAV_GROUPS: NavGroup[] = [
+const PRIMARY_MENU: NavItem[] = [
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard, permission: "dashboard" },
+  { title: "Message", href: "/purchase/follow-up", icon: MessageSquare, badge: 26, permission: "purchase:follow-up" },
+  { title: "Analytics", href: "/reports/analytics", icon: BarChart2, permission: "reports:analytics" },
+  { title: "Transaction", href: "/purchase/po", icon: ArrowLeftRight, permission: "purchase:po" },
+  { title: "Payment", href: "/purchase/payment", icon: CreditCard, badge: 8, permission: "purchase:payment" },
+];
+
+const MANAGEMENT_GROUPS: NavGroup[] = [
   {
-    groupTitle: "Dashboard",
-    icon: LayoutDashboard,
-    items: [
-      { title: "Overview", href: "/dashboard", permission: "dashboard" },
-      { title: "Purchase Analytics", href: "/reports/analytics", permission: "reports:analytics" },
-    ],
-  },
-  {
-    groupTitle: "Purchase",
-    icon: ShoppingBag,
+    groupTitle: "Procurement",
+    icon: Activity,
     items: [
       { title: "Purchase Indent", href: "/purchase/indent", icon: FileText, permission: "purchase:indent" },
       { title: "Indent Approval", href: "/purchase/approval", icon: CheckCircle2, permission: "purchase:approval" },
-      { title: "Quotation Management", href: "/purchase/quotation", icon: Quote, permission: "purchase:quotation" },
+      { title: "Quotations", href: "/purchase/quotation", icon: Quote, permission: "purchase:quotation" },
       { title: "Vendor Selection", href: "/purchase/vendor-selection", icon: Users2, permission: "purchase:vendor-selection" },
-      { title: "Purchase Order", href: "/purchase/po", icon: FileSpreadsheet, permission: "purchase:po" },
       { title: "PO Approval", href: "/purchase/po-approval", icon: CheckCircle2, permission: "purchase:po-approval" },
       { title: "PO Dispatch", href: "/purchase/po-dispatch", icon: Truck, permission: "purchase:po-dispatch" },
-      { title: "Follow-Up", href: "/purchase/follow-up", icon: PhoneCall, permission: "purchase:follow-up" },
-      { title: "Payment", href: "/purchase/payment", icon: CreditCard, permission: "purchase:payment" },
-      { title: "Logistics", href: "/purchase/logistics", icon: Truck, permission: "purchase:logistics" },
       { title: "Material Receipt", href: "/purchase/receipt", icon: PackageCheck, permission: "purchase:receipt" },
       { title: "Stock / Inventory", href: "/purchase/stock", icon: Boxes, permission: "purchase:stock" },
       { title: "Purchase Return", href: "/purchase/returns", icon: RotateCcw, permission: "purchase:returns" },
@@ -84,7 +85,7 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     groupTitle: "Masters",
-    icon: Database,
+    icon: Building2,
     items: [
       { title: "Vendors", href: "/masters/vendors", icon: Building2, permission: "masters:vendors" },
       { title: "Materials", href: "/masters/materials", icon: Package, permission: "masters:materials" },
@@ -96,12 +97,12 @@ const NAV_GROUPS: NavGroup[] = [
       { title: "Tax / GST", href: "/masters/tax", icon: Percent, permission: "masters:tax" },
       { title: "Payment Terms", href: "/masters/payment-terms", icon: Receipt, permission: "masters:payment-terms" },
       { title: "Delivery Terms", href: "/masters/delivery-terms", icon: Truck, permission: "masters:delivery-terms" },
-      { title: "TAT Configuration", href: "/masters/tat", icon: Clock, permission: "masters:tat" },
+      { title: "TAT Config", href: "/masters/tat", icon: Clock, permission: "masters:tat" },
     ],
   },
   {
     groupTitle: "Reports",
-    icon: BarChart3,
+    icon: BarChart2,
     items: [
       { title: "Purchase Register", href: "/reports/purchase-register", permission: "reports:purchase-register" },
       { title: "Vendor Performance", href: "/reports/vendor-performance", permission: "reports:vendor-performance" },
@@ -109,16 +110,14 @@ const NAV_GROUPS: NavGroup[] = [
       { title: "PO Status Report", href: "/reports/po-status", permission: "reports:po-status" },
       { title: "Payment Report", href: "/reports/payment", permission: "reports:payment" },
       { title: "Material Receipt Report", href: "/reports/material-receipt", permission: "reports:material-receipt" },
-      { title: "Purchase Analytics", href: "/reports/analytics", permission: "reports:analytics" },
     ],
   },
   {
     groupTitle: "Administration",
-    icon: ShieldAlert,
+    icon: Lock,
     items: [
       { title: "Users", href: "/administration/users", icon: Users, permission: "administration:users" },
       { title: "Roles & Permissions", href: "/administration/roles", icon: Lock, permission: "administration:roles" },
-      { title: "Settings", href: "/administration/settings", icon: Settings, permission: "administration:settings" },
       { title: "Audit Logs", href: "/administration/audit-logs", icon: History, permission: "administration:audit-logs" },
     ],
   },
@@ -134,10 +133,9 @@ export function Sidebar({
   setIsMobileOpen: setExternalMobileOpen,
 }: SidebarProps = {}) {
   const pathname = usePathname();
-  const { hasPermission } = useAuth();
+  const { hasPermission, logout } = useAuth();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    Dashboard: true,
-    Purchase: true,
+    Procurement: true,
     Masters: false,
     Reports: false,
     Administration: false,
@@ -152,30 +150,95 @@ export function Sidebar({
   };
 
   const navContent = (
-    <div className="flex flex-col h-full bg-slate-950 text-slate-300 border-r border-slate-800/80">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800/80 px-4 py-5 select-none overflow-y-auto">
       {/* Brand Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/80">
-        <div className="flex items-center space-x-2.5">
-          <div className="w-7 h-7 rounded-md bg-slate-800 border border-slate-700 text-white font-bold text-xs flex items-center justify-center shadow-xs">
-            PF
+      <div className="flex items-center justify-between pb-6 px-1">
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-slate-950 text-white flex items-center justify-center shadow-md">
+            {/* Custom geometric logo icon matching Ofspace */}
+            <svg
+              className="w-5 h-5 fill-current text-white"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.41 0 8 3.59 8 8 0 1.85-.63 3.55-1.69 4.9z" />
+            </svg>
           </div>
           <div>
-            <h1 className="font-semibold text-xs text-white leading-tight">PurchaseFlow</h1>
-            <p className="text-[9px] text-slate-500 font-medium uppercase tracking-wider">Enterprise PMS</p>
+            <h1 className="font-bold text-base text-slate-900 dark:text-white tracking-tight leading-none">
+              PurchaseFlow
+            </h1>
+            <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium mt-0.5">
+              Enterprise PMS
+            </p>
           </div>
-        </div>
+        </Link>
         <button
-          className="lg:hidden text-slate-400 hover:text-white"
+          className="lg:hidden text-slate-400 hover:text-slate-700 dark:hover:text-white p-1"
           onClick={() => setIsMobileOpen(false)}
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Navigation Groups */}
-      <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-3">
-        {NAV_GROUPS.map((group) => {
-          // Filter items based on user permissions
+      {/* Main Menu Section */}
+      <div className="space-y-1">
+        <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">
+          Main Menu
+        </p>
+
+        {PRIMARY_MENU.map((item) => {
+          if (item.permission && !hasPermission(item.permission)) return null;
+
+          const isActive = pathname === item.href;
+          const Icon = item.icon;
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setIsMobileOpen(false)}
+              className={clsx(
+                "group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150",
+                isActive
+                  ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950 shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <Icon
+                  className={clsx(
+                    "w-4 h-4 transition-colors",
+                    isActive
+                      ? "text-white dark:text-slate-950"
+                      : "text-slate-500 group-hover:text-slate-800 dark:text-slate-400 dark:group-hover:text-slate-200"
+                  )}
+                />
+                <span>{item.title}</span>
+              </div>
+              {item.badge !== undefined && (
+                <span
+                  className={clsx(
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                    isActive
+                      ? "bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-950"
+                      : "bg-slate-950 text-white dark:bg-slate-800 dark:text-slate-200"
+                  )}
+                >
+                  {item.badge}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Management / Workflow Section */}
+      <div className="mt-6 space-y-1">
+        <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">
+          Account Management
+        </p>
+
+        {MANAGEMENT_GROUPS.map((group) => {
           const visibleItems = group.items.filter((item) =>
             item.permission ? hasPermission(item.permission) : true
           );
@@ -183,26 +246,32 @@ export function Sidebar({
           if (visibleItems.length === 0) return null;
 
           const isExpanded = expandedGroups[group.groupTitle];
+          const hasActiveChild = visibleItems.some((i) => pathname === i.href);
 
           return (
             <div key={group.groupTitle} className="space-y-0.5">
               <button
                 onClick={() => toggleGroup(group.groupTitle)}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-200 transition-colors cursor-pointer"
+                className={clsx(
+                  "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer",
+                  hasActiveChild
+                    ? "text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800/40"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                )}
               >
-                <div className="flex items-center space-x-2">
-                  <group.icon className="w-3.5 h-3.5 text-slate-400" />
+                <div className="flex items-center gap-3">
+                  <group.icon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                   <span>{group.groupTitle}</span>
                 </div>
                 {isExpanded ? (
-                  <ChevronDown className="w-3 h-3 text-slate-500" />
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                 ) : (
-                  <ChevronRight className="w-3 h-3 text-slate-500" />
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                 )}
               </button>
 
               {isExpanded && (
-                <div className="space-y-0.5 pl-2">
+                <div className="pl-6 pr-1 py-1 space-y-1">
                   {visibleItems.map((item) => {
                     const isActive = pathname === item.href;
                     const ItemIcon = item.icon;
@@ -213,14 +282,14 @@ export function Sidebar({
                         href={item.href}
                         onClick={() => setIsMobileOpen(false)}
                         className={clsx(
-                          "flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors",
+                          "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
                           isActive
-                            ? "bg-slate-800/90 text-white font-semibold border border-slate-700/60"
-                            : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
+                            ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-semibold"
+                            : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40"
                         )}
                       >
-                        {ItemIcon && <ItemIcon className={clsx("w-3.5 h-3.5", isActive ? "text-slate-200" : "text-slate-500")} />}
-                        <span>{item.title}</span>
+                        {ItemIcon && <ItemIcon className="w-3.5 h-3.5" />}
+                        <span className="truncate">{item.title}</span>
                       </Link>
                     );
                   })}
@@ -229,29 +298,55 @@ export function Sidebar({
             </div>
           );
         })}
+
+        {/* Setting & Logout */}
+        <Link
+          href="/administration/settings"
+          onClick={() => setIsMobileOpen(false)}
+          className={clsx(
+            "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors",
+            pathname === "/administration/settings"
+              ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+          )}
+        >
+          <Settings className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+          <span>Setting</span>
+        </Link>
+
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30 transition-colors cursor-pointer text-left"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Log out</span>
+        </button>
       </div>
     </div>
   );
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-60 shrink-0 h-screen sticky top-0 z-30">
+      {/* Desktop Sticky Sidebar */}
+      <aside className="hidden lg:block w-64 shrink-0 h-screen sticky top-0 z-30">
         {navContent}
       </aside>
 
-      {/* Mobile Sidebar Drawer */}
+      {/* Mobile Drawer */}
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
-          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs" onClick={() => setIsMobileOpen(false)} />
-          <div className="relative w-60 max-w-xs h-full z-10">{navContent}</div>
+          <div
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"
+            onClick={() => setIsMobileOpen(false)}
+          />
+          <div className="relative w-64 max-w-xs h-full z-10">{navContent}</div>
         </div>
       )}
 
-      {/* Mobile Trigger Button */}
+      {/* Mobile Trigger Float */}
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="lg:hidden fixed bottom-4 right-4 z-40 p-2.5 rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800 focus:outline-none border border-slate-700"
+        className="lg:hidden fixed bottom-4 right-4 z-40 p-3 rounded-full bg-slate-950 text-white shadow-xl hover:bg-slate-800 focus:outline-none"
       >
         <Menu className="w-5 h-5" />
       </button>
